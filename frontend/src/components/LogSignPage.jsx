@@ -11,10 +11,9 @@ export default function LogSignPage({ onNavigate }) {
   return (
     <div className="h-screen bg-[#0a0f18] text-white font-sans overflow-hidden flex flex-col">
       <nav className="flex items-center justify-between px-6 py-4 border-b border-[#131c2b] bg-[#0a0f18]/80 backdrop-blur-md z-50">
-        <span className="text-xl font-bold tracking-tight">
-          <span className="text-[#4a9eff]">Code</span>
-          <span className="text-[#00e5ff]">-1</span>
-        </span>
+        <div className="text-xl font-semibold tracking-tight text-blue-50">
+            CODE<span className="text-blue-400">-1</span>
+          </div>
         <div className="flex items-center gap-8">
             <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-gray-400 hover:text-[#4a9eff] text-[14px] tracking-wide border border-[#1e2d3d] hover:border-[#4a9eff]/40 rounded-lg px-4 py-2 transition-colors">← Back</button>
         </div>
@@ -28,7 +27,7 @@ export default function LogSignPage({ onNavigate }) {
           <div className="p-6 space-y-4">
             <div>
               <p className="text-white font-semibold text-lg mb-1">{mode === "login" ? "Welcome back" : "Create account"}</p>
-              <p className="text-gray-500 text-xs">{mode === "login"? "Sign in to your world": "Start creating memories today"}</p>
+              <p className="text-gray-500 text-xs">{mode === "login"? "Login into your memories": "Start creating memories today"}</p>
             </div>
             {mode === "signup" && (
               <div>
