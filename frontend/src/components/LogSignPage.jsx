@@ -5,7 +5,7 @@ export default function LogSignPage({ onNavigate }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("");
   const navigate = onNavigate ?? ((nextPath) => {window.location.href = nextPath;});
 
   return (
@@ -27,13 +27,27 @@ export default function LogSignPage({ onNavigate }) {
           <div className="p-6 space-y-4">
             <div>
               <p className="text-slate-900 font-semibold text-lg mb-1">{mode === "login" ? "Welcome back" : "Create account"}</p>
-              <p className="text-slate-500 text-sm">{mode === "login"? "Login into your memories": "Start creating memories today"}</p>
             </div>
             {mode === "signup" && (
               <div>
                 <label className="text-sm text-slate-600 mb-1 block">Full Name</label>
                 <input value={fullName} onChange={e => setFullName(e.target.value)} type="text" placeholder="John Doe" className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-base text-slate-900 outline-none focus:border-blue-500 transition-colors placeholder-slate-400"/>
               </div>
+            )}
+            {mode === "signup" && (
+              <fieldset>
+                <legend className="text-sm text-slate-600 mb-2 block">I am signing up as</legend>
+                <div className="flex gap-3">
+                  <label className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input type="radio" name="role" value="caretaker" checked={role === "caretaker"} onChange={e => setRole(e.target.value)} required className="accent-blue-600" />
+                    Caretaker
+                  </label>
+                  <label className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input type="radio" name="role" value="elder" checked={role === "elder"} onChange={e => setRole(e.target.value)} required className="accent-blue-600" />
+                    Elder patient
+                  </label>
+                </div>
+              </fieldset>
             )}
             <div>
               <label className="text-sm text-slate-600 mb-1 block">Email</label>
@@ -43,15 +57,8 @@ export default function LogSignPage({ onNavigate }) {
               <label className="text-sm text-slate-600 mb-1 block">Password</label>
               <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="••••••••" className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-base text-slate-900 outline-none focus:border-blue-500 transition-colors placeholder-slate-400"  />
             </div>
-
-            {mode === "signup" && (
-              <div>
-                <label className="text-sm text-slate-600 mb-1 block">Confirm Password</label>
-                <input value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} type="password" placeholder="••••••••" className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-base text-slate-900 outline-none focus:border-blue-500 transition-colors placeholder-slate-400"/>
-              </div>
-            )}
             {mode === "login" && (<div className="flex justify-end"><button className="text-sm text-blue-700 hover:text-blue-900 transition-colors">Forgot password?</button></div>)}
-            <button onClick={() => navigate("/homepage")} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-base font-medium transition-colors">{mode === "login" ? "Sign In" : "Create Account"}</button>
+            <button onClick={() => navigate("/homepage")} disabled={mode === "signup" && !role} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-base font-medium transition-colors">{mode === "login" ? "Sign In" : "Create Account"}</button>
             <p className="text-center text-sm text-slate-500">
               {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
               <button onClick={() => setMode(mode === "login" ? "signup" : "login")} className="text-blue-700 hover:text-blue-900 transition-colors">{mode === "login" ? "Sign up" : "Log in"} </button>
