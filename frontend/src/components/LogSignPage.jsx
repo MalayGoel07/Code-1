@@ -18,8 +18,8 @@ export default function LogSignPage({ onNavigate }) {
             <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-slate-600 hover:text-blue-700 text-base tracking-wide border border-slate-300 hover:border-blue-400 rounded-lg px-4 py-2 transition-colors">← Back</button>
         </div>
       </nav>
-      <div className="flex-1 flex items-center justify-center gap-10 px-8 z-10">
-        <div className="w-[360px] bg-white border border-slate-200 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm">
+      <div className="flex-1 flex items-center justify-center gap-10 px-8 z-10 ">
+        <div className="w-[360px] bg-slate-200 border border-slate-400 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm">
           <div className="flex border-b border-slate-200">
             <button onClick={() => setMode("login")} className={`flex-1 py-3 text-base font-medium tracking-wide transition-colors ${mode === "login" ? "text-blue-700 border-b-2 border-blue-600 bg-blue-50": "text-slate-500 hover:text-slate-800"}`}>Login</button>
             <button onClick={() => setMode("signup")} className={`flex-1 py-3 text-base font-medium tracking-wide transition-colors ${ mode === "signup" ? "text-blue-700 border-b-2 border-blue-600 bg-blue-50" : "text-slate-500 hover:text-slate-800" }`} >Sign Up</button>

@@ -4,14 +4,7 @@ const img = "/i1.png";
 const TILE_ICONS = [Brain, Heart, Home, Star, Sun, Cloud];
 
 export default function CodeOneLanding({ onNavigate }) {
-  const openLogin = () => {
-    if (onNavigate) {
-      onNavigate("/logsign");
-      return;
-    }
-    window.location.href = "/logsign";
-  };
-
+  const navigate = onNavigate ?? ((nextPath) => {window.location.href = nextPath;});
   return (
     <div className="scroll-smooth bg-white font-sans text-slate-900 h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-blue-300">
 
@@ -23,9 +16,9 @@ export default function CodeOneLanding({ onNavigate }) {
           <div className="flex flex-row gap-2">
             <a href="#home" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Home</a>
             <a href="#work" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Working</a>
-            <a href="#" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">What is Dementia?</a>
+            <a onClick={() => navigate("/DementiaPage")} className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">What is Dementia?</a>
             <a href="#" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">About</a>
-            <button onClick={openLogin} className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Log In / Sign Up</button>
+            <button onClick={() => navigate("/logsign")} className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Log In / Sign Up</button>
           </div>
         </nav>
       </header>
@@ -70,7 +63,7 @@ export default function CodeOneLanding({ onNavigate }) {
         </div>
       </section>
 
-      <section id="work" className="border-t border-slate-200 bg-slate-50 px-6 py-24">
+      <section id="work" className="border-t border-slate-200 bg-slate-200 px-6 py-24">
         <div className="mx-auto max-w-4xl">
           <div className="flex flex-col items-center justify-center text-center">
             <p className="mb-3 text-lg font-medium uppercase tracking-widest text-blue-400"> What CODE-1 does</p>
@@ -147,7 +140,7 @@ export default function CodeOneLanding({ onNavigate }) {
             <h3 className="text-2xl font-semibold text-white">Built for families who live far, but care close.</h3>
             <p className="mt-2 text-slate-300">Create an account to set up a patient profile and invite your family circle.</p>
           </div>
-          <button onClick={openLogin} className="shrink-0 rounded-full bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">Log In / Sign Up </button>
+          <button onClick={() => navigate("/logsign")} className="shrink-0 rounded-full bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">Log In / Sign Up </button>
         </div>
       </section>
 
