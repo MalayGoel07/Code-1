@@ -9,41 +9,41 @@ export default function LogSignPage({ onNavigate }) {
   const navigate = onNavigate ?? ((nextPath) => {window.location.href = nextPath;});
 
   return (
-    <div className="h-screen bg-white text-slate-900 font-sans overflow-hidden flex flex-col">
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white/90 backdrop-blur-md z-50">
-        <div className="text-xl font-semibold tracking-tight text-slate-900">
-            CODE<span className="text-blue-400">-1</span>
+    <div className="theme-page h-screen overflow-hidden flex flex-col" style={{ background: "#FBF8F2", color: "#20261F", fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif" }}>
+      <nav className="flex items-center justify-between px-6 py-4 border-b backdrop-blur-md z-50" style={{ borderColor: "#E4DCC8", background: "rgba(255,255,255,0.9)" }}>
+        <div className="text-xl font-semibold tracking-tight">
+            CODE<span style={{ color: "#2F6F62" }}>-1</span>
           </div>
         <div className="flex items-center gap-8">
-            <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-slate-600 hover:text-blue-700 text-base tracking-wide border border-slate-300 hover:border-blue-400 rounded-lg px-4 py-2 transition-colors">← Back</button>
+            <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-base tracking-wide rounded-full px-4 py-2 transition-colors" style={{ color: "#5B6459", border: "2px solid #C9C2B2" }}>← Back</button>
         </div>
       </nav>
       <div className="flex-1 flex items-center justify-center gap-10 px-8 z-10 ">
-        <div className="w-[360px] bg-slate-200 border border-slate-400 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm">
-          <div className="flex border-b border-slate-200">
-            <button onClick={() => setMode("login")} className={`flex-1 py-3 text-base font-medium tracking-wide transition-colors ${mode === "login" ? "text-blue-700 border-b-2 border-blue-600 bg-blue-50": "text-slate-500 hover:text-slate-800"}`}>Login</button>
-            <button onClick={() => setMode("signup")} className={`flex-1 py-3 text-base font-medium tracking-wide transition-colors ${ mode === "signup" ? "text-blue-700 border-b-2 border-blue-600 bg-blue-50" : "text-slate-500 hover:text-slate-800" }`} >Sign Up</button>
+        <div className="w-[360px] rounded-3xl overflow-hidden flex-shrink-0 shadow-sm" style={{ background: "#EFEEE6", border: "2px solid #E4DCC8" }}>
+          <div className="flex" style={{ borderBottom: "2px solid #E4DCC8" }}>
+            <button onClick={() => setMode("login")} className={`flex-1 py-3 text-base font-medium tracking-wide transition-colors ${mode === "login" ? "bg-white": "text-slate-500"}`} style={mode === "login" ? { color: "#2F6F62", borderBottom: "3px solid #2F6F62" } : {}}>Login</button>
+            <button onClick={() => setMode("signup")} className={`flex-1 py-3 text-base font-medium tracking-wide transition-colors ${ mode === "signup" ? "bg-white" : "text-slate-500" }`} style={mode === "signup" ? { color: "#2F6F62", borderBottom: "3px solid #2F6F62" } : {}} >Sign Up</button>
           </div>
           <div className="p-6 space-y-4">
             <div>
-              <p className="text-slate-900 font-semibold text-lg mb-1">{mode === "login" ? "Welcome back" : "Create account"}</p>
+              <p className="font-semibold text-lg mb-1">{mode === "login" ? "Welcome back" : "Create account"}</p>
             </div>
             {mode === "signup" && (
               <div>
-                <label className="text-sm text-slate-600 mb-1 block">Full Name</label>
-                <input value={fullName} onChange={e => setFullName(e.target.value)} type="text" placeholder="John Doe" className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-base text-slate-900 outline-none focus:border-blue-500 transition-colors placeholder-slate-400"/>
+                <label className="text-sm mb-1 block" style={{ color: "#5B6459" }}>Full Name</label>
+                <input value={fullName} onChange={e => setFullName(e.target.value)} type="text" placeholder="John Doe" className="w-full rounded-xl px-4 py-2.5 text-base outline-none transition-colors" style={{ background: "#FFFFFF", border: "2px solid #C9C2B2", color: "#20261F" }}/>
               </div>
             )}
             {mode === "signup" && (
               <fieldset>
-                <legend className="text-sm text-slate-600 mb-2 block">I am signing up as</legend>
+                <legend className="text-sm mb-2 block" style={{ color: "#5B6459" }}>I am signing up as</legend>
                 <div className="flex gap-3">
-                  <label className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                    <input type="radio" name="role" value="caretaker" checked={role === "caretaker"} onChange={e => setRole(e.target.value)} required className="accent-blue-600" />
+                  <label className="flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm cursor-pointer" style={{ background: "#FFFFFF", border: "2px solid #C9C2B2" }}>
+                    <input type="radio" name="role" value="caretaker" checked={role === "caretaker"} onChange={e => setRole(e.target.value)} required className="accent-green-700" />
                     Caretaker
                   </label>
-                  <label className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-700 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                    <input type="radio" name="role" value="elder" checked={role === "elder"} onChange={e => setRole(e.target.value)} required className="accent-blue-600" />
+                  <label className="flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm cursor-pointer" style={{ background: "#FFFFFF", border: "2px solid #C9C2B2" }}>
+                    <input type="radio" name="role" value="elder" checked={role === "elder"} onChange={e => setRole(e.target.value)} required className="accent-green-700" />
                     Elder patient
                   </label>
                 </div>

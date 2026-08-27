@@ -1,5 +1,5 @@
 import { useState } from "react";
-const img = "/i1.png";
+const puzzle = "/puzzle.png";
 const diseases = [
       {
         title: "Alzheimer’s Disease",
@@ -144,18 +144,17 @@ export default function DementiaPage({onNavigate}){
     const [openIndex, setOpenIndex] = useState(null);
     const navigate = onNavigate ?? ((nextPath) => {window.location.href = nextPath;});
     return(
-        <div className="scroll-smooth bg-white text-slate-900 h-screen overflow-x-hidden overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 flex flex-col gap-8">
-            
-            <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="theme-page scroll-smooth h-screen overflow-x-hidden overflow-y-auto flex flex-col gap-8" style={{ background: "#FBF8F2", color: "#20261F", fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif" }}>
+            <header className="sticky top-0 z-50 border-b backdrop-blur" style={{ borderColor: "#E4DCC8", background: "rgba(255,255,255,0.9)" }}>
               <nav className="mx-auto flex items-center justify-between p-4">
                 <div className="text-xl font-semibold tracking-tight text-slate-900">
-                  CODE<span className="text-blue-400">-1</span>
+                  CODE<span style={{ color: "#2F6F62" }}>-1</span>
                 </div>
                 <div className="flex flex-row gap-2">
                   <a href="#Demnetia" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Demnetia</a>
                   <a href="#ss" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Sign and Symptoms</a>
                   <a href="#wtd" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">What to do?</a>
-                  <button onClick={() => navigate("/LandingPage")} className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">← Back</button>
+                  <button onClick={() => navigate("/")} className="rounded-full px-5 py-2 text-sm font-bold text-white transition hover:opacity-90" style={{ background: "#2F6F62" }}>← Back</button>
                 </div>
               </nav>
             </header>
@@ -169,10 +168,10 @@ export default function DementiaPage({onNavigate}){
                         As opposed to Alzheimer’s, some forms of dementia are reversible. 
                     </p>
                 </div>
-              <img src={img} alt="Cognitive games screenshot" className="h-80 w-80 shrink-0 rounded-xl border border-blue-900/40 object-cover" />
+              <img src={puzzle} alt="Cognitive games screenshot" className="h-80 w-80 shrink-0 rounded-xl border border-blue-900/40 object-cover" />
             </section>
 
-            <section className="mx-auto flex w-full flex-col items-center justify-center gap-16 bg-slate-200 p-8 mt-4">
+            <section className="mx-auto flex w-full flex-col items-center justify-center gap-16 p-8 mt-4" style={{ background: "#EFEEE6" }}>
                 <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl m-4">What are the differnent type of Dementia?</h1>
               {diseases.map((item, index) => (
                 <div key={index} className="w-full max-w-4xl border-b border-slate-400 p-4">
@@ -195,7 +194,7 @@ export default function DementiaPage({onNavigate}){
                 </div>
                 <div className="grid grid-cols-3 gap-6 mt-4">
                   {symptoms.map((item, index) => (
-                    <div key={index} className="w-full border border-slate-400 bg-slate-200 rounded-xl p-6">
+                    <div key={index} className="w-full rounded-2xl p-6" style={{ border: "2px solid #E4DCC8", background: "#EFEEE6" }}>
                       <div className="flex flex-col w-full items-center">
                         <span className="text-2xl font-semibold">{item.title}</span>
                         <p className="pt-4 text-center text-slate-600">{item.description}</p>
@@ -205,13 +204,13 @@ export default function DementiaPage({onNavigate}){
                 </div>
             </section>
 
-            <section id="wtd" className="scroll-mt-24 mx-auto flex w-full flex-col items-center justify-center p-8 mt-4 bg-slate-200">
+            <section id="wtd" className="scroll-mt-24 mx-auto flex w-full flex-col items-center justify-center p-8 mt-4" style={{ background: "#EFEEE6" }}>
                 <div className="p-4 flex flex-col items-center mb-4 max-w-4xl mb-4">
                     <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl mb-4">What do I do if I have been diagnosed with Dementia?</h1>
                     <p className="text-2xl text-slate-600"> A dementia diagnosis doesn’t mean that you can’t live life to the fullest. To do that, it’s important that you find a healthy way to deal with your emotions and face your diagnosis. It’s important to not isolate yourself, but include yourself in social activities. The following tips may be helpful for you if you have been diagnosed with dementia or Alzheimer’s :
                     </p>
                 </div>
-                <div className="grid grid-cols-3 gap-6 mt-4 border border-slate-600 bg-white rounded-xl max-w-6xl">
+                <div className="grid grid-cols-3 gap-6 mt-4 rounded-2xl max-w-6xl" style={{ border: "2px solid #E4DCC8", background: "#FFFFFF" }}>
                   {tips.map((item, index) => (
                     <div key={index} className="w-full p-6">
                       <div className="flex flex-col w-full items-center">
@@ -224,10 +223,10 @@ export default function DementiaPage({onNavigate}){
             </section>
 
             <section className="px-6 py-8">
-              <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-3xl border border-slate-200 bg-slate-900 p-10 sm:flex-row sm:items-center">
+              <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-3xl border p-10 sm:flex-row sm:items-center" style={{ borderColor: "#E4DCC8", background: "#F3E7D0" }}>
                 <div>
-                  <h3 className="text-2xl font-semibold text-white">Stay connected..</h3>
-                  <p className="mt-2 text-slate-300">Create an account to set up a patient profile and invite your family circle.</p>
+                  <h3 className="text-2xl font-semibold">Stay connected..</h3>
+                  <p className="mt-2" style={{ color: "#5B6459" }}>Create an account to set up a patient profile and invite your family circle.</p>
                 </div>
                 <button onClick={() => navigate("/logsign")} className="shrink-0 rounded-full bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">Log In / Sign Up </button>
               </div>

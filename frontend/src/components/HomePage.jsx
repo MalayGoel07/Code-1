@@ -1,99 +1,84 @@
-import { Gamepad2, MessageCircle, Bell, BookOpen, Mic, Wifi, WifiOff, Smile, Meh, Frown } from "lucide-react";
+import { Gamepad2, MessageCircle, BookOpen, Mic, Smile, Meh, Frown, Settings, PhoneCall } from "lucide-react";
 import { useState } from "react";
 
-const ACTIVITIES = [
-  { icon: Gamepad2, label: "Play a Game", sub: "Memory & attention", color: "bg-blue-600" },
-  { icon: MessageCircle, label: "Talk to Companion", sub: "Voice assistant", color: "bg-cyan-600" },
-  { icon: Bell, label: "Reminders", sub: "2 medicines left today", color: "bg-amber-500" },
-  { icon: BookOpen, label: "Today's Story", sub: "5 min listen", color: "bg-indigo-500" },
+const PRIMARY_ACTIVITIES = [
+  { icon: MessageCircle, label: "Talk to Someone", sub: "Voice chat", tint: "#2F6F62" },
+  { icon: Gamepad2, label: "Play a Game", sub: "Memory & fun", tint: "#8A6D3B" },
+  { icon: BookOpen, label: "Today's Story", sub: "5 minute listen", tint: "#2F6F62" },
 ];
 
-const ACTIVITIES_DONE = 3;
-const ACTIVITIES_TOTAL = 5;
+function getGreeting(hour) {
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function PatientHome() {
   const [mood, setMood] = useState(null);
-  const isOnline = true;
+  const hour = new Date().getHours();
 
   return (
-    <div className="min-h-screen bg-white pb-28 text-slate-900">
-      {/* Top bar */}
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur">
+    <div
+      className="theme-page min-h-screen pb-28"
+      style={{ background: "#FBF8F2", color: "#20261F", fontFamily: "Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif",  }}>
+      <header className="flex items-start justify-between px-6 pt-6 pb-4">
         <div>
-          <p className="text-xl font-semibold tracking-tight">Good morning, Kong</p>
-          <p className="mt-1 text-sm text-slate-500">Thursday, 27 August</p>
+          <p className="text-3xl font-bold">{getGreeting(hour)}, Kong</p>
+          <p className="mt-1 text-xl" style={{ color: "#5B6459" }}>Thursday, 27 August &nbsp;·&nbsp; Morning</p>
         </div>
-        <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
-          {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-          {isOnline ? "Online" : "Offline"}
-        </div>
+        <button aria-label="Settings" className="flex h-12 w-12 items-center justify-center rounded-full border-2" style={{ borderColor: "#C9C2B2", background: "#FFFFFF" }}>
+          <Settings className="h-6 w-6" style={{ color: "#5B6459" }} />
+        </button>
       </header>
 
-      {/* Mood check-in */}
-      <main className="mx-auto max-w-3xl px-6">
-      <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-100 p-5">
-        <p className="mb-4 text-center text-lg font-medium">How are you feeling today?</p>
-        <div className="flex justify-center gap-6">
-          <button
-            onClick={() => setMood("good")}
-            className={`rounded-full p-4 transition ${
-              mood === "good" ? "bg-green-500 text-white" : "bg-white text-slate-600 hover:bg-blue-50"
-            }`}
-          >
-            <Smile className="h-8 w-8" />
-          </button>
-          <button
-            onClick={() => setMood("okay")}
-            className={`rounded-full p-4 transition ${
-              mood === "okay" ? "bg-amber-500 text-white" : "bg-white text-slate-600 hover:bg-blue-50"
-            }`}
-          >
-            <Meh className="h-8 w-8" />
-          </button>
-          <button
-            onClick={() => setMood("low")}
-            className={`rounded-full p-4 transition ${
-              mood === "low" ? "bg-red-500 text-white" : "bg-white text-slate-600 hover:bg-blue-50"
-            }`}
-          >
-            <Frown className="h-8 w-8" />
-          </button>
-        </div>
+      <div className="px-6">
+        <button className="flex w-full items-center justify-center gap-3 rounded-2xl py-5 text-2xl font-bold text-white shadow-md active:scale-95" style={{ background: "#B23A3A" }}>
+          <PhoneCall className="h-7 w-7" />
+          Call for Help
+        </button>
       </div>
 
-      {/* Progress ring */}
-      <div className="mt-6 flex items-center gap-5 rounded-2xl border border-slate-200 bg-slate-100 p-5">
-        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-blue-400">
-          <span className="text-lg font-semibold text-slate-800">
-            {ACTIVITIES_DONE}/{ACTIVITIES_TOTAL}
-          </span>
+      <main className="mx-auto max-w-2xl px-6">
+        <div className="mt-6 rounded-3xl p-6" style={{ background: "#F3E7D0", border: "3px solid #C97A2B" }}>
+          <p className="text-lg font-bold" style={{ color: "#8A4E12" }}>Reminder</p>
+          <p className="mt-2 text-2xl font-bold">Take your morning medicine</p>
+          <p className="mt-1 text-lg" style={{ color: "#6B4A1E" }}>2 left for today</p>
+          <button className="mt-4 w-full rounded-xl py-4 text-xl font-bold text-white active:scale-95" style={{ background: "#C97A2B" }}>Mark as Done</button>
         </div>
-        <div>
-          <p className="text-lg font-medium">Today's Activities</p>
-          <p className="text-slate-500">Keep going, you're doing great</p>
-        </div>
-      </div>
 
-      {/* Activity tiles */}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {ACTIVITIES.map(({ icon: Icon, label, sub, color }) => (
-          <button
-            key={label}
-            className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md active:scale-95"
-          >
-            <div className={`flex h-14 w-14 items-center justify-center rounded-full ${color}`}>
-              <Icon className="h-7 w-7 text-white" />
-            </div>
-            <p className="text-lg font-medium">{label}</p>
-            <p className="text-sm text-slate-500">{sub}</p>
-          </button>
-        ))}
-      </div>
+        <div className="mt-8 flex flex-col gap-4">
+          {PRIMARY_ACTIVITIES.map(({ icon: Icon, label, sub, tint }) => (
+            <button key={label} className="flex items-center gap-5 rounded-2xl p-5 text-left shadow-sm active:scale-95" style={{ background: "#FFFFFF", border: "2px solid #E4DCC8" }}>
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full" style={{ background: tint }}>
+                <Icon className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{label}</p>
+                <p className="text-lg" style={{ color: "#5B6459" }}>{sub}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-8 rounded-3xl p-6 text-center" style={{ background: "#EFEEE6" }}>
+          <p className="text-xl font-bold">How are you feeling right now?</p>
+          <div className="mt-5 flex justify-center gap-6">
+            <button onClick={() => setMood("good")} aria-label="Good" className="flex h-20 w-20 items-center justify-center rounded-full transition active:scale-95" style={{ background: mood === "good" ? "#2F6F62" : "#FFFFFF", border: "2px solid #C9C2B2",  }}>
+              <Smile className="h-10 w-10" style={{ color: mood === "good" ? "#FFFFFF" : "#2F6F62" }} />
+            </button>
+            <button onClick={() => setMood("okay")} aria-label="Okay" className="flex h-20 w-20 items-center justify-center rounded-full transition active:scale-95" style={{ background: mood === "okay" ? "#C97A2B" : "#FFFFFF", border: "2px solid #C9C2B2", }} >
+              <Meh className="h-10 w-10" style={{ color: mood === "okay" ? "#FFFFFF" : "#C97A2B" }} />
+            </button>
+            <button onClick={() => setMood("low")} aria-label="Not good" className="flex h-20 w-20 items-center justify-center rounded-full transition active:scale-95" style={{ background: mood === "low" ? "#B23A3A" : "#FFFFFF", border: "2px solid #C9C2B2", }} >
+              <Frown className="h-10 w-10" style={{ color: mood === "low" ? "#FFFFFF" : "#B23A3A" }} />
+            </button>
+          </div>
+        </div>
       </main>
 
-      {/* Floating voice assist button */}
-      <button aria-label="Start voice assistant" className="fixed bottom-8 left-1/2 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-blue-600 shadow-lg shadow-blue-200 transition hover:bg-blue-700 active:scale-95">
-        <Mic className="h-7 w-7 text-white" />
+      <button aria-label="Start voice assistant" className="fixed bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center justify-center gap-1 rounded-full shadow-lg active:scale-95" style={{ background: "#2F6F62", width: "96px", height: "96px" }}  >
+        <Mic className="h-8 w-8 text-white" />
+        <span className="text-xs font-bold text-white">Talk</span>
       </button>
     </div>
   );
