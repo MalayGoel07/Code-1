@@ -11,7 +11,7 @@ const ACTIVITIES = [
 const ACTIVITIES_DONE = 3;
 const ACTIVITIES_TOTAL = 5;
 
-export default function PatientHome() {
+export default function CaretakerPage() {
   const [mood, setMood] = useState(null);
   const isOnline = true;
 
