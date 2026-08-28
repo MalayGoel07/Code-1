@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  ArrowLeft,
   Mic,
   Layers,
   Shapes,
@@ -9,6 +8,8 @@ import {
   Puzzle,
   Dice5,
 } from "lucide-react";
+
+import PatientNavigation from "./PatientNavigation";
 
 const GAMES = [
   {
@@ -87,9 +88,11 @@ const VOICE_COPY = {
 };
 
 export default function GamePage({ onNavigate }) {
-  const navigate = onNavigate ?? ((nextPath) => {
-    window.location.href = nextPath;
-  });
+  const navigate =
+    onNavigate ??
+    ((nextPath) => {
+      window.location.href = nextPath;
+    });
 
   const [voiceState, setVoiceState] = useState("idle");
   const [comingSoonId, setComingSoonId] = useState(null);
@@ -101,14 +104,17 @@ export default function GamePage({ onNavigate }) {
       setVoiceState("listening");
       return;
     }
+
     if (voiceState === "listening") {
       setVoiceState("processing");
       return;
     }
+
     if (voiceState === "processing") {
       setVoiceState("not_understood");
       return;
     }
+
     if (voiceState === "not_understood") {
       setVoiceState("idle");
     }
@@ -120,25 +126,17 @@ export default function GamePage({ onNavigate }) {
       style={{
         background: "#FBF8F2",
         color: "#20261F",
-        fontFamily: "Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif",
+        fontFamily:
+          "Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif",
       }}
     >
-      <header className="px-6 pt-6">
-        <button
-          type="button"
-          onClick={() => navigate("/homepage")}
-          className="inline-flex items-center gap-2 rounded-full border-2 px-5 py-3 text-lg font-bold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
-          style={{
-            borderColor: "#C9C2B2",
-            background: "#FFFFFF",
-            color: "#20261F",
-          }}
-        >
-          <ArrowLeft className="h-6 w-6" aria-hidden="true" />
-          Back
-        </button>
-      </header>
+      {/* Patient Navigation */}
+      <PatientNavigation
+        onNavigate={navigate}
+        activePage="games"
+      />
 
+      {/* Voice Assistant */}
       <div className="mt-8 flex flex-col items-center px-6">
         <button
           type="button"
@@ -153,9 +151,18 @@ export default function GamePage({ onNavigate }) {
           style={{
             width: "76px",
             height: "76px",
-            background: voiceState === "listening" ? "#F3E7D0" : "#2F6F62",
-            borderColor: voiceState === "listening" ? "#C97A2B" : "#24594F",
-            color: voiceState === "listening" ? "#2F6F62" : "#FFFFFF",
+            background:
+              voiceState === "listening"
+                ? "#F3E7D0"
+                : "#2F6F62",
+            borderColor:
+              voiceState === "listening"
+                ? "#C97A2B"
+                : "#24594F",
+            color:
+              voiceState === "listening"
+                ? "#2F6F62"
+                : "#FFFFFF",
           }}
         >
           <Mic
@@ -168,11 +175,18 @@ export default function GamePage({ onNavigate }) {
           />
         </button>
 
-        <p className="mt-3 text-center text-lg font-bold" aria-live="polite">
+        <p
+          className="mt-3 text-center text-lg font-bold"
+          aria-live="polite"
+        >
           {voiceCopy.label}
         </p>
+
         {voiceCopy.support ? (
-          <p className="mt-1 max-w-sm text-center text-base" style={{ color: "#5B6459" }}>
+          <p
+            className="mt-1 max-w-sm text-center text-base"
+            style={{ color: "#5B6459" }}
+          >
             {voiceCopy.support}
           </p>
         ) : null}
@@ -189,26 +203,44 @@ export default function GamePage({ onNavigate }) {
         ) : null}
       </div>
 
+      {/* Games */}
       <main className="mx-auto mt-10 max-w-6xl px-6">
-        <h1 className="text-center text-4xl font-bold sm:text-5xl">Games</h1>
-        <p className="mx-auto mt-3 max-w-xl text-center text-xl" style={{ color: "#5B6459" }}>
+        <h1 className="text-center text-4xl font-bold sm:text-5xl">
+          Games
+        </h1>
+
+        <p
+          className="mx-auto mt-3 max-w-xl text-center text-xl"
+          style={{ color: "#5B6459" }}
+        >
           Choose an activity to exercise your mind.
         </p>
 
         <ul className="mt-10 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 lg:grid-cols-3">
           {GAMES.map((game) => {
             const Icon = game.icon;
-            const isComingSoon = comingSoonId === game.id;
+            const isComingSoon =
+              comingSoonId === game.id;
 
             return (
-              <li key={game.id} className="flex">
+              <li
+                key={game.id}
+                className="flex"
+              >
                 <article
                   className="flex h-full w-full flex-col items-center rounded-3xl p-6 text-center shadow-sm"
-                  style={{ background: "#EFEEE6", border: "2px solid #E4DCC8" }}
+                  style={{
+                    background: "#EFEEE6",
+                    border: "2px solid #E4DCC8",
+                  }}
                 >
+                  {/* Game Icon / Image */}
                   <div
                     className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full"
-                    style={{ background: "#F3E7D0", border: "3px solid #E4DCC8" }}
+                    style={{
+                      background: "#F3E7D0",
+                      border: "3px solid #E4DCC8",
+                    }}
                   >
                     {game.image ? (
                       <img
@@ -217,30 +249,52 @@ export default function GamePage({ onNavigate }) {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <Icon className="h-12 w-12" style={{ color: "#2F6F62" }} aria-hidden="true" />
+                      <Icon
+                        className="h-12 w-12"
+                        style={{ color: "#2F6F62" }}
+                        aria-hidden="true"
+                      />
                     )}
                   </div>
 
+                  {/* Category + Difficulty */}
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                     <p
                       className="rounded-full px-3 py-1 text-base font-bold"
-                      style={{ background: "#F3E7D0", color: "#8A4E12" }}
+                      style={{
+                        background: "#F3E7D0",
+                        color: "#8A4E12",
+                      }}
                     >
                       {game.category}
                     </p>
+
                     <p
                       className="rounded-full px-3 py-1 text-base font-bold"
-                      style={{ background: "#FFFFFF", color: "#2F6F62", border: "2px solid #C9C2B2" }}
+                      style={{
+                        background: "#FFFFFF",
+                        color: "#2F6F62",
+                        border: "2px solid #C9C2B2",
+                      }}
                     >
                       {game.difficultyLabel}
                     </p>
                   </div>
 
-                  <h2 className="mt-4 text-2xl font-bold">{game.name}</h2>
-                  <p className="mt-2 flex-1 text-lg leading-snug" style={{ color: "#5B6459" }}>
+                  {/* Game Name */}
+                  <h2 className="mt-4 text-2xl font-bold">
+                    {game.name}
+                  </h2>
+
+                  {/* Game Description */}
+                  <p
+                    className="mt-2 flex-1 text-lg leading-snug"
+                    style={{ color: "#5B6459" }}
+                  >
                     {game.description}
                   </p>
 
+                  {/* Play / Coming Soon */}
                   {isComingSoon ? (
                     <p
                       id={`${game.id}-coming-soon`}
@@ -257,9 +311,13 @@ export default function GamePage({ onNavigate }) {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setComingSoonId(game.id)}
+                      onClick={() =>
+                        setComingSoonId(game.id)
+                      }
                       className="mt-6 w-full rounded-full py-4 text-xl font-bold text-white shadow-sm active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
-                      style={{ background: "#2F6F62" }}
+                      style={{
+                        background: "#2F6F62",
+                      }}
                     >
                       Play
                     </button>
