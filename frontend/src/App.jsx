@@ -1,6 +1,14 @@
+import { useState } from "react";
+
 import LandingPage from "./components/LandingPage";
 import LogSignPage from "./components/LogSignPage";
 import HomePage from "./components/HomePage";
+import CaretakerPage from "./components/CaretakerPage";
+import ElderCareReport from "./components/ElderCareReport";
+import ReminderPage from "./components/ReminderPage";
+import HelpBotPage from "./components/HelpBotPage";
+import ProfilePage from "./components/ProfilePage";
+import SettingsPage from "./components/SettingsPage";
 import DementiaPage from "./components/DementiaPage";
 import CaretakerPage from "./components/CaretakerPage";
 import GamePage from "./components/patient/GamePage";
@@ -26,6 +34,29 @@ export default function App() {
     return <CaretakerPage onNavigate={navigate} />;
   }
 
+  if (path === "/caretaker/report") {
+    return <ElderCareReport onNavigate={navigate} />;
+  }
+
+  if (path === "/caretaker/reminders") {
+    return <ReminderPage onNavigate={navigate} />;
+  }
+
+  if (path === "/caretaker/help") {
+    return <HelpBotPage onNavigate={navigate} />;
+  }
+
+  if (path === "/caretaker/profile") {
+    return <ProfilePage onNavigate={navigate} />;
+  }
+
+  if (path === "/caretaker/settings") {
+    return <SettingsPage onNavigate={navigate} />;
+  }
+
+  if (path === "/logsign") {
+    return <LogSignPage onNavigate={navigate} />;
+  }
   if (path === "/logsign") {
     return <LogSignPage onNavigate={navigate} />;
   }
