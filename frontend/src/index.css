@@ -1,5 +1,39 @@
 @import "tailwindcss";
 
+.theme-page {
+  --theme-bg: #FBF8F2;
+  --theme-panel: #EFEEE6;
+  --theme-border: #E4DCC8;
+  --theme-muted: #5B6459;
+  --theme-primary: #2F6F62;
+  --theme-warm: #C97A2B;
+  background-color: var(--theme-bg);
+  color: #20261F;
+}
+
+.theme-page .bg-white { background-color: #FFFFFF; }
+.theme-page .bg-slate-50 { background-color: #FFFFFF; }
+.theme-page .bg-slate-100,
+.theme-page .bg-slate-200 { background-color: var(--theme-panel); }
+.theme-page .bg-slate-900 { background-color: #F3E7D0; }
+.theme-page .text-slate-900,
+.theme-page .text-slate-800 { color: #20261F; }
+.theme-page .text-slate-700,
+.theme-page .text-slate-600,
+.theme-page .text-slate-500 { color: var(--theme-muted); }
+.theme-page .border-slate-200,
+.theme-page .border-slate-300,
+.theme-page .border-slate-400 { border-color: var(--theme-border); }
+.theme-page .bg-blue-600 { background-color: var(--theme-primary); }
+.theme-page .hover\:bg-blue-700:hover,
+.theme-page .hover\:bg-blue-500:hover { background-color: #24594F; }
+.theme-page .text-blue-700,
+.theme-page .text-blue-400 { color: var(--theme-primary); }
+.theme-page .border-blue-200,
+.theme-page .border-blue-300 { border-color: #C9C2B2; }
+.theme-page .bg-blue-50,
+.theme-page .bg-blue-100 { background-color: var(--theme-panel); }
+
 @keyframes tileFlip {
           0%, 40% { transform: rotateY(0deg); }
           50%, 90% { transform: rotateY(180deg); }

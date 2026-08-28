@@ -9,6 +9,14 @@ import ReminderPage from "./components/ReminderPage";
 import HelpBotPage from "./components/HelpBotPage";
 import ProfilePage from "./components/ProfilePage";
 import SettingsPage from "./components/SettingsPage";
+import DementiaPage from "./components/DementiaPage";
+import CaretakerPage from "./components/CaretakerPage";
+import GamePage from "./components/patient/GamePage";
+import Reminder from "./components/patient/Reminder";
+import ElderAi from "./components/patient/ElderAi";
+import Story from "./components/patient/Story";
+import Profile from "./components/patient/Profile";
+import { useState } from "react";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname);
@@ -49,6 +57,34 @@ export default function App() {
   if (path === "/logsign") {
     return <LogSignPage onNavigate={navigate} />;
   }
+  if (path === "/logsign") {
+    return <LogSignPage onNavigate={navigate} />;
+  }
+
+  if (path === "/DementiaPage") {
+    return <DementiaPage onNavigate={navigate} />;
+  }
+
+  if (path === "/game") {
+    return <GamePage onNavigate={navigate} />;
+  }
+
+  if (path === "/elder-ai") {
+  return <ElderAi onNavigate={navigate} />;
+}
+
+  if (path === "/reminder") {
+    return <Reminder onNavigate={navigate} />;
+  }
+
+  if (path === "/profile") {
+  return <Profile onNavigate={navigate} />;
+}
+
+  if (path === "/story") {
+  return <Story onNavigate={navigate} />;
+}
+
 
   return <LandingPage onNavigate={navigate} />;
 }
