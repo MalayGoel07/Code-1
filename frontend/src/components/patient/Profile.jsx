@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {UserRound,Pencil,CalendarDays,Languages,Heart,Gamepad2,BookOpen,Bell,ShieldCheck,UsersRound,Check,} from "lucide-react";
 
+import { api } from "../../api";
 import PatientNavigation from "./PatientNavigation";
 
 export default function Profile({ onNavigate }) {
@@ -33,9 +34,7 @@ export default function Profile({ onNavigate }) {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:8000/patient/me", {headers: {Authorization: `Bearer ${token}`,},});
-        if (!response.ok) {throw new Error("Failed to load profile");}
-        const data = await response.json();
+        const data = await api.get("/patient/me", { headers: { Authorization: `Bearer ${token}` } });
         setProfile({
           name: data.full_name || data.username || "",
           age: data.age !== null && data.age !== undefined ? String(data.age) : "",
@@ -60,24 +59,20 @@ export default function Profile({ onNavigate }) {
       setError("");
 
       const token = localStorage.getItem("access_token");
-      const response = await fetch("http://localhost:8000/patient/me", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      await api.put(
+        "/patient/me",
+        {
           full_name: profile.name,
           age: profile.age === "" ? null : Number(profile.age),
           preferred_language: profile.language,
           caregiver_email: profile.caregiver_email,
-        }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.detail || "Profile update failed");
-      }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       localStorage.setItem("full_name", profile.name || userName || "there");
       setIsEditing(false);

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { api } from "../../api";
+
 const SHAPE_TYPES = [
   { type: "triangle", label: "Triangle" },
   { type: "square", label: "Square" },
@@ -61,17 +63,14 @@ export default function PatternGame({ onNavigate }) {
     }
 
     try {
-      await fetch("http://localhost:8000/patient/game-complete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      await api.post(
+        "/patient/game-complete",
+        {
           game_id: "pattern-game",
           game_name: "Pattern Match",
-        }),
-      });
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setGameRecorded(true);
     } catch (error) {
       console.error("Failed to save game completion:", error);

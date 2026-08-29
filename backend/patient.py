@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,10 +18,35 @@ class PatientProfileUpdate(BaseModel):
     caregiver_email: str | None = None
 
 
+class ReminderItem(BaseModel):
+    id: str
+    title: str
+    description: str = ""
+    time: str
+    type: str = "Medicine"
+    completed: bool = False
+
+
+class ReminderSubmission(BaseModel):
+    title: str
+    description: str = ""
+    time: str
+    type: str = "Medicine"
+
+
+class ReminderCompletion(BaseModel):
+    reminder_id: str
+
+
 class GameCompletionEntry(BaseModel):
     game_id: str
     game_name: str
     completed_at: str | None = None
+
+
+class MoodSelection(BaseModel):
+    mood: str
+    note: str | None = None
 
 
 @router.get("/me")
@@ -37,6 +63,8 @@ async def get_patient_profile( current_user: Annotated[User, Depends(get_current
         "age": user.get("age"),
         "preferred_language": user.get("preferred_language", "English"),
         "caregiver_email": user.get("caregiver_email", ""),
+        "current_mood": user.get("current_mood"),
+        "mood_history": user.get("mood_history", []),
         "games_played": games_played,
         "games_completed_count": len(games_played),
     }
@@ -69,6 +97,45 @@ async def update_patient_profile( data: PatientProfileUpdate,current_user: Annot
     }
 
 
+@router.post("/mood")
+async def save_mood(data: MoodSelection, current_user: Annotated[User, Depends(get_current_active_user)]):
+    mood = (data.mood or "").strip().lower()
+    if mood not in {"good", "okay", "low"}:
+        raise HTTPException(status_code=400, detail="Mood must be good, okay, or low")
+
+    user = users_collection.find_one({"username": current_user.username})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    history = list(user.get("mood_history", []))
+    entry = {
+        "mood": mood,
+        "label": {"good": "Good", "okay": "Okay", "low": "Not good"}[mood],
+        "selected_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if data.note:
+        entry["note"] = data.note
+    history.append(entry)
+
+    users_collection.update_one(
+        {"username": current_user.username},
+        {"$set": {"current_mood": mood, "mood_history": history}},
+    )
+    return {"message": "Mood saved", "current_mood": mood, "mood_history": history}
+
+
+@router.get("/mood-history")
+async def get_mood_history(current_user: Annotated[User, Depends(get_current_active_user)]):
+    user = users_collection.find_one({"username": current_user.username})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "current_mood": user.get("current_mood"),
+        "mood_history": user.get("mood_history", []),
+    }
+
+
 @router.post("/game-complete")
 async def record_game_completed(data: GameCompletionEntry, current_user: Annotated[User, Depends(get_current_active_user)]):
     game_id = (data.game_id or "").strip()
@@ -93,3 +160,55 @@ async def record_game_completed(data: GameCompletionEntry, current_user: Annotat
         "games_played": games_played,
         "count": len(games_played),
     }
+
+
+@router.get("/reminders")
+async def get_patient_reminders(current_user: Annotated[User, Depends(get_current_active_user)]):
+    user = users_collection.find_one({"username": current_user.username})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    reminders = list(user.get("reminders", []))
+    return {
+        "reminders": reminders,
+        "done_count": user.get("completed_reminders_count", 0),
+    }
+
+
+@router.post("/reminders")
+async def add_patient_reminder(data: ReminderSubmission, current_user: Annotated[User, Depends(get_current_active_user)]):
+    user = users_collection.find_one({"username": current_user.username})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    reminder = {
+        "id": uuid.uuid4().hex,
+        "title": data.title,
+        "description": data.description,
+        "time": data.time,
+        "type": data.type,
+        "completed": False,
+    }
+    reminders = list(user.get("reminders", []))
+    reminders.append(reminder)
+    users_collection.update_one({"username": current_user.username}, {"$set": {"reminders": reminders}})
+    return {"message": "Reminder added", "reminder": reminder}
+
+
+@router.post("/reminders/complete")
+async def complete_patient_reminder(data: ReminderCompletion, current_user: Annotated[User, Depends(get_current_active_user)]):
+    user = users_collection.find_one({"username": current_user.username})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    reminders = list(user.get("reminders", []))
+    remaining = [item for item in reminders if item.get("id") != data.reminder_id]
+    if len(remaining) == len(reminders):
+        raise HTTPException(status_code=404, detail="Reminder not found")
+
+    done_count = int(user.get("completed_reminders_count", 0)) + 1
+    users_collection.update_one(
+        {"username": current_user.username},
+        {"$set": {"reminders": remaining, "completed_reminders_count": done_count}},
+    )
+    return {"message": "Reminder completed", "done_count": done_count, "reminders": remaining}

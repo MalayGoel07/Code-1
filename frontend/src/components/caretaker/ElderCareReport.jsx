@@ -1,6 +1,23 @@
+import { useEffect, useState } from "react";
 import {ArrowLeft,Activity,Brain,Clock3,Gamepad2,TrendingUp,HeartPulse,CalendarDays,CheckCircle2,} from "lucide-react";
 
+import { api } from "../../api";
+
 export default function ElderCareReport({ onNavigate }) {
+  const [report, setReport] = useState({ patients: [], count: 0 });
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    api.get("/caretaker/report", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((data) => setReport(data || { patients: [], count: 0 }))
+      .catch(() => setReport({ patients: [], count: 0 }))
+      .finally(() => setLoading(false));
+  }, []);
+  const patients = report.patients || [];
+
   return (
     <main className="min-h-screen bg-[#faf8f3] text-[#3f3a34]">
       <header className="border-b border-[#e6e0d6] bg-[#fffdf9]">
@@ -45,38 +62,37 @@ export default function ElderCareReport({ onNavigate }) {
               <Gamepad2 className="h-6 w-6 text-[#6f8f7a]" />
             </div>
 
-            <p className="mt-5 text-sm text-[#8a837a]">Games Completed</p>
-            <p className="mt-2 text-3xl font-semibold text-[#3f3a34]">3</p>
-            <p className="mt-2 text-sm text-[#6f8f7a]">+1 from yesterday</p>
+            <p className="mt-5 text-sm text-[#8a837a]">Linked elders</p>
+            <p className="mt-2 text-3xl font-semibold text-[#3f3a34]">{loading ? "..." : patients.length}</p>
+            <p className="mt-2 text-sm text-[#6f8f7a]">Active care relationships</p>
           </div>
 
           <div className="rounded-2xl border border-[#e4ded4] bg-[#fffdf9] p-6 shadow-sm">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f4efe6]">
               <Clock3 className="h-6 w-6 text-[#8b806f]" />
             </div>
-            <p className="mt-5 text-sm text-[#8a837a]"> Active Time</p>
-            <p className="mt-2 text-3xl font-semibold text-[#3f3a34]">42 min</p>
-            <p className="mt-2 text-sm text-[#8a837a]"> Time spent on activities</p>
+            <p className="mt-5 text-sm text-[#8a837a]">Mood entries</p>
+            <p className="mt-2 text-3xl font-semibold text-[#3f3a34]">{loading ? "..." : patients.reduce((sum, patient) => sum + (patient.mood_history?.length || 0), 0)}</p>
+            <p className="mt-2 text-sm text-[#8a837a]">Saved result updates</p>
           </div>
 
           <div className="rounded-2xl border border-[#e4ded4] bg-[#fffdf9] p-6 shadow-sm">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef4ec]">
               <Brain className="h-6 w-6 text-[#6f8f7a]" />
             </div>
-            <p className="mt-5 text-sm text-[#8a837a]">Cognitive Score</p>
-            <p className="mt-2 text-3xl font-semibold text-[#3f3a34]"> 82%</p>
-            <p className="mt-2 text-sm text-[#6f8f7a]">Good engagement today</p>
+            <p className="mt-5 text-sm text-[#8a837a]">Current mood</p>
+            <p className="mt-2 text-3xl font-semibold text-[#3f3a34]">{loading ? "..." : (patients[0]?.current_mood ? patients[0].current_mood : "-")}</p>
+            <p className="mt-2 text-sm text-[#6f8f7a]">Latest saved selection</p>
           </div>
-
 
           <div className="rounded-2xl border border-[#e4ded4] bg-[#fffdf9] p-6 shadow-sm">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef4ec]">
               <TrendingUp className="h-6 w-6 text-[#6f8f7a]" />
             </div>
 
-            <p className="mt-5 text-sm text-[#8a837a]"> Overall Trend </p>
-            <p className="mt-2 text-3xl font-semibold text-[#3f3a34]">Improving</p>
-            <p className="mt-2 text-sm text-[#6f8f7a]">Positive progress</p>
+            <p className="mt-5 text-sm text-[#8a837a]">Overall trend</p>
+            <p className="mt-2 text-3xl font-semibold text-[#3f3a34]">{loading ? "..." : (patients.length > 0 ? "Active" : "No data")}</p>
+            <p className="mt-2 text-sm text-[#6f8f7a]">Latest caregiver report</p>
           </div>
         </div>
 
@@ -93,29 +109,36 @@ export default function ElderCareReport({ onNavigate }) {
             </div>
 
             <div className="mt-6 space-y-4">
-              <div className="flex items-center justify-between rounded-2xl bg-[#faf7f1] p-4">
-                <div>
-                  <p className="font-medium text-[#3f3a34]"> Memory Match </p>
-                  <p className="mt-1 text-sm text-[#8a837a]">Memory and attention game</p>
+              {patients.length === 0 ? (
+                <div className="rounded-2xl bg-[#faf7f1] p-4 text-sm text-[#8a837a]">
+                  No elder is linked to your caretaker account yet.
                 </div>
-                <CheckCircle2 className="h-6 w-6 text-[#6f8f7a]" />
-              </div>
+              ) : (
+                patients.map((patient) => (
+                  <div key={patient.email || patient.username} className="rounded-2xl bg-[#faf7f1] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-[#3f3a34]">{patient.full_name || patient.username || "Elder"}</p>
+                        <p className="mt-1 text-sm text-[#8a837a]">{patient.current_mood ? `Current mood: ${patient.current_mood}` : "No mood selected yet"}</p>
+                      </div>
+                      <CheckCircle2 className="h-6 w-6 text-[#6f8f7a]" />
+                    </div>
 
-              <div className="flex items-center justify-between rounded-2xl bg-[#faf7f1] p-4">
-                <div>
-                  <p className="font-medium text-[#3f3a34]">Daily Routine Recall</p>
-                  <p className="mt-1 text-sm text-[#8a837a]"> Routine memory activity</p>
-                </div>
-                <CheckCircle2 className="h-6 w-6 text-[#6f8f7a]" />
-              </div>
-
-              <div className="flex items-center justify-between rounded-2xl bg-[#faf7f1] p-4">
-                <div>
-                  <p className="font-medium text-[#3f3a34]">Pattern Recognition</p>
-                  <p className="mt-1 text-sm text-[#8a837a]">Cognitive pattern exercise</p>
-                </div>
-                <CheckCircle2 className="h-6 w-6 text-[#6f8f7a]" />
-              </div>
+                    {patient.mood_history && patient.mood_history.length > 0 ? (
+                      <div className="mt-4 space-y-2">
+                        {patient.mood_history.slice(-3).reverse().map((entry, index) => (
+                          <div key={`${patient.email}-${index}`} className="flex items-center justify-between rounded-xl border border-[#e4ded4] bg-white p-3 text-sm text-[#756f67]">
+                            <span>{entry.label || entry.mood}</span>
+                            <span>{new Date(entry.selected_at).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-[#8a837a]">No results recorded yet.</p>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -127,22 +150,23 @@ export default function ElderCareReport({ onNavigate }) {
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-[#3f3a34]">Care Insight</h2>
-                <p className="text-sm text-[#8a837a]">AI-generated summary</p>
+                <p className="text-sm text-[#8a837a]">Saved wellbeing summary</p>
               </div>
             </div>
             <div className="mt-6 rounded-2xl border border-[#e5ded3] bg-[#fffdf9] p-5">
               <p className="leading-relaxed text-[#756f67]">
-                Your elder showed good engagement with today's activities.
-                Memory performance remained consistent, with particularly
-                strong results in routine recall.
+                {patients.length === 0
+                  ? "No elder mood history has been linked to this account yet."
+                  : `${patients[0].full_name || patients[0].username || "Your elder"} most recently selected ${patients[0].current_mood || "no mood"}.`}
               </p>
               <p className="mt-4 leading-relaxed text-[#756f67]">
-                Continuing short, familiar activities throughout the day may
-                help maintain engagement and routine.
+                {patients.length > 0 && patients[0].mood_history?.length
+                  ? "Recent selections are now stored in the database and available here for review."
+                  : "Once the elder picks a mood on the homepage, the result will appear here."}
               </p>
             </div>
             <div className="mt-5 flex items-center gap-2 text-sm text-[#6f8f7a]">
-              <TrendingUp className="h-4 w-4" />Positive engagement trend detected
+              <TrendingUp className="h-4 w-4" />{patients.length > 0 ? "Result history is live" : "Waiting for results"}
             </div>
           </div>
         </div>

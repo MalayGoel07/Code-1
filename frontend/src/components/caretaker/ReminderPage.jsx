@@ -1,98 +1,65 @@
 import { useState } from "react";
 import { ArrowLeft, Bell, Plus, Clock3, Pill, CheckCircle2, Circle, Trash2, CalendarDays, X,} from "lucide-react";
+import { api } from "../../api";
 
 export default function ReminderPage({ onNavigate }) {
-  const [reminders, setReminders] = useState([
-    {
-      id: 1,
-      title: "Morning Medicine",
-      description: "Take prescribed morning medication",
-      time: "8:00 AM",
-      type: "Medicine",
-      completed: false,
-    },
-    {
-      id: 2,
-      title: "Drink Water",
-      description: "Have a glass of water",
-      time: "10:30 AM",
-      type: "Health",
-      completed: false,
-    },
-    {
-      id: 3,
-      title: "Afternoon Medicine",
-      description: "Take prescribed afternoon medication",
-      time: "2:00 PM",
-      type: "Medicine",
-      completed: false,
-    },
-    {
-      id: 4,
-      title: "Evening Walk",
-      description: "Go for a short walk",
-      time: "5:30 PM",
-      type: "Activity",
-      completed: false,
-    },
-  ]);
-
+  const [reminders, setReminders] = useState([]);
   const [showForm, setShowForm] = useState(false);
-
-  const [newReminder, setNewReminder] = useState({
-    title: "",
-    description: "",
-    time: "",
-    type: "Medicine",
-  });
-
-  const toggleReminder = (id) => {
-    setReminders((currentReminders) =>
-      currentReminders.map((reminder) =>
-        reminder.id === id
-          ? { ...reminder, completed: !reminder.completed }
-          : reminder
-      )
-    );
-  };
-
-  const deleteReminder = (id) => {
-    setReminders((currentReminders) =>
-      currentReminders.filter((reminder) => reminder.id !== id)
-    );
-  };
-
-  const addReminder = (event) => {
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [newReminder, setNewReminder] = useState({ patient_email: "", title: "", description: "", time: "", type: "Medicine",});
+  const addReminder = async (event) => {
     event.preventDefault();
-
-    if (!newReminder.title || !newReminder.time) {
+    if (!newReminder.patient_email || !newReminder.title || !newReminder.time) {
+      setError("Please fill in patient email, title, and time.");
+      return;
+    }
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setError("Please log in to add a reminder.");
       return;
     }
 
-    const reminder = {
-      id: Date.now(),
-      title: newReminder.title,
-      description: newReminder.description || "No description added",
-      time: newReminder.time,
-      type: newReminder.type,
-      completed: false,
-    };
+    try {
+      setSaving(true);
+      setError("");
 
-    setReminders((currentReminders) => [...currentReminders, reminder]);
+      const data = await api.post(
+        "/caretaker/reminders",
+        {
+          patient_email: newReminder.patient_email,
+          title: newReminder.title,
+          description: newReminder.description || "No description added",
+          time: newReminder.time,
+          type: newReminder.type,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    setNewReminder({
-      title: "",
-      description: "",
-      time: "",
-      type: "Medicine",
-    });
+      const reminder = {
+        id: data.reminder?.id || Date.now(),
+        title: newReminder.title,
+        description: newReminder.description || "No description added",
+        time: newReminder.time,
+        type: newReminder.type,
+        completed: false,
+      };
 
-    setShowForm(false);
+      setReminders((currentReminders) => [...currentReminders, reminder]);
+      setNewReminder({ patient_email: "", title: "", description: "", time: "", type: "Medicine",});
+      setShowForm(false);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const completedCount = reminders.filter(
-    (reminder) => reminder.completed
-  ).length;
+  const toggleReminder = (id) => {setReminders((currentReminders) =>currentReminders.map((reminder) =>reminder.id === id? { ...reminder, completed: !reminder.completed }: reminder));};
+  const deleteReminder = (id) => {setReminders((currentReminders) =>currentReminders.filter((reminder) => reminder.id !== id));};
+  const completedCount = reminders.filter((reminder) => reminder.completed).length;
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] text-[#3f3b36]">
@@ -150,6 +117,10 @@ export default function ReminderPage({ onNavigate }) {
             </div>
 
             <form onSubmit={addReminder} className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-[#554f48]">Patient Email</label>
+                <input type="email" value={newReminder.patient_email} onChange={(event) => setNewReminder({ ...newReminder, patient_email: event.target.value }) } placeholder="elder@example.com" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
+              </div>
               <div>
                 <label className="text-sm font-medium text-[#554f48]">Reminder Title</label>
                 <input type="text" value={newReminder.title} onChange={(event) => setNewReminder({ ...newReminder, title: event.target.value, }) } placeholder="Example: Take morning medicine" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
@@ -174,7 +145,8 @@ export default function ReminderPage({ onNavigate }) {
                 <label className="text-sm font-medium text-[#554f48]"> Description</label>
                 <input type="text" value={newReminder.description} onChange={(event) => setNewReminder({ ...newReminder, description: event.target.value, }) } placeholder="Optional description" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
               </div>
-              <button type="submit" className="sm:col-span-2 rounded-xl bg-[#5f8f70] px-5 py-3 font-medium text-white transition hover:bg-[#4d7a5e]">Save Reminder</button>
+              {error && <p className="sm:col-span-2 text-sm text-red-600">{error}</p>}
+              <button type="submit" disabled={saving} className="sm:col-span-2 rounded-xl bg-[#5f8f70] px-5 py-3 font-medium text-white transition hover:bg-[#4d7a5e] disabled:cursor-not-allowed disabled:opacity-70">{saving ? "Saving..." : "Save Reminder"}</button>
             </form>
           </div>
         )}

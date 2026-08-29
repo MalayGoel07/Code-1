@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { api } from "../api";
 
 export default function LogSignPage({ onNavigate }) {
   const [mode, setMode] = useState("login");
@@ -28,30 +29,24 @@ export default function LogSignPage({ onNavigate }) {
     setLoading(true);
 
     try {
-      const endpoint = mode === "login" ? "http://localhost:8000/auth/login" : "http://localhost:8000/auth/signup";
       const isLogin = mode === "login";
+      const endpoint = isLogin ? "/auth/login" : "/auth/signup";
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": isLogin ? "application/x-www-form-urlencoded" : "application/json",
-        },
-        body: isLogin
-          ? new URLSearchParams({ username: email, password }).toString()
-          : JSON.stringify({
-              username: fullName,
-              email,
-              full_name: fullName,
-              password,
-              role: role === "caretaker" ? "caretaker" : "patient",
-            }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Authentication failed");
-      }
+      const data = isLogin
+        ? await api.request(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({ username: email, password }).toString(),
+          })
+        : await api.post(endpoint, {
+            username: fullName,
+            email,
+            full_name: fullName,
+            password,
+            role: role === "caretaker" ? "caretaker" : "patient",
+          });
 
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("token_type", data.token_type || "bearer");

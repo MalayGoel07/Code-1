@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Gamepad2,
   MessageCircle,
@@ -9,6 +9,7 @@ import {
   PhoneCall,
 } from "lucide-react";
 
+import { api } from "../../api";
 import PatientNavigation from "./PatientNavigation";
 
 const PRIMARY_ACTIVITIES = [
@@ -49,7 +50,30 @@ export default function PatientHome({ onNavigate, onLogout }) {
     });
 
   const [mood, setMood] = useState(null);
+  const [savingMood, setSavingMood] = useState(false);
   const [reminderDone, setReminderDone] = useState(false);
+
+  useEffect(() => {
+    const token = window.localStorage.getItem("access_token");
+    if (!token) return;
+    api.get("/patient/mood-history", {headers: { Authorization: `Bearer ${token}` }, }).then((data) => {if (data && data.current_mood) {setMood(data.current_mood);window.localStorage.setItem("current_mood", data.current_mood);}}).catch(() => {});}, []);
+
+  const saveMoodSelection = async (nextMood) => {
+    const token = window.localStorage.getItem("access_token");
+    if (!token) return;
+
+    setMood(nextMood);
+    window.localStorage.setItem("current_mood", nextMood);
+    setSavingMood(true);
+
+    try {
+      await api.post("/patient/mood",{ mood: nextMood },{ headers: { Authorization: `Bearer ${token}` } });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSavingMood(false);
+    }
+  };
 
   const hour = new Date().getHours();
   const userName =typeof window !== "undefined" ? window.localStorage.getItem("full_name") || "there": "there";
@@ -101,21 +125,21 @@ export default function PatientHome({ onNavigate, onLogout }) {
         <section className="mt-8 pb-16 mb-16 rounded-3xl border-2 border-[#E4DCC8] bg-[#EFEEE6] p-6 text-center">
           <p className="text-xl font-bold">How are you feeling today?</p>
           <div className="mt-5 flex justify-center gap-4 sm:gap-6">
-            <button type="button" onClick={() => setMood("good")} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2">
+            <button type="button" onClick={() => saveMoodSelection("good")} disabled={savingMood} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2 disabled:opacity-70">
               <span className={[ "flex h-20 w-20 items-center justify-center rounded-full border", mood === "good" ? "border-[3px] border-[#20261F] bg-[#2F6F62]" : "border-[#C9C2B2] bg-white", ].join(" ")}>
                 <Smile className={[ "h-10 w-10", mood === "good" ? "text-white" : "text-[#2F6F62]", ].join(" ")} aria-hidden="true"/>
               </span>
               <span className="text-lg font-bold">Good</span>
             </button>
 
-            <button type="button" onClick={() => setMood("okay")} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2">
+            <button type="button" onClick={() => saveMoodSelection("okay")} disabled={savingMood} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2 disabled:opacity-70">
               <span className={[ "flex h-20 w-20 items-center justify-center rounded-full border", mood === "okay" ? "border-[3px] border-[#20261F] bg-[#C97A2B]" : "border-[#C9C2B2] bg-white", ].join(" ")}>
                 <Meh className={[ "h-10 w-10", mood === "okay" ? "text-white" : "text-[#C97A2B]", ].join(" ")} aria-hidden="true" />
               </span>
               <span className="text-lg font-bold">Okay</span>
             </button>
 
-            <button type="button" onClick={() => setMood("low")} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2">
+            <button type="button" onClick={() => saveMoodSelection("low")} disabled={savingMood} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2 disabled:opacity-70">
               <span className={[ "flex h-20 w-20 items-center justify-center rounded-full border", mood === "low" ? "border-[3px] border-[#20261F] bg-[#B23A3A]" : "border-[#C9C2B2] bg-white", ].join(" ")}>
                 <Frown className={[ "h-10 w-10", mood === "low" ? "text-white" : "text-[#B23A3A]", ].join(" ")} aria-hidden="true"/>
               </span>
