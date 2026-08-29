@@ -19,7 +19,6 @@ export default function CodeOneLanding({ onNavigate }) {
           <div className="flex flex-row gap-2">
             <button onClick={() => navigate("/DementiaPage")} className="rounded-full border border-blue-200 px-5 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">What is dementia?</button>
             <button onClick={() => navigate("/homepage")} className="rounded-full border border-blue-200 px-5 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Patient Home</button>
-            <button onClick={() => navigate("/caretaker")} className="rounded-full border border-blue-200 px-5 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Caretaker View</button>
             <button onClick={() => navigate("/logsign")} className="rounded-full px-5 py-2 text-sm font-bold text-white transition hover:opacity-90" style={{ background: "#2F6F62" }}>Log In / Sign Up</button>
           </div>
         </nav>

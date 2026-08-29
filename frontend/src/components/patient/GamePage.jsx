@@ -1,14 +1,5 @@
 import { useState } from "react";
-import {
-  Mic,
-  Layers,
-  Shapes,
-  ListOrdered,
-  Link2,
-  Puzzle,
-  Dice5,
-} from "lucide-react";
-
+import {Mic,Layers,Shapes,ListOrdered,Link2,Puzzle,Dice5,} from "lucide-react";
 import PatientNavigation from "./PatientNavigation";
 
 const GAMES = [
@@ -121,206 +112,55 @@ export default function GamePage({ onNavigate }) {
   };
 
   return (
-    <div
-      className="theme-page min-h-screen pb-16"
-      style={{
-        background: "#FBF8F2",
-        color: "#20261F",
-        fontFamily:
-          "Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif",
-      }}
-    >
-      {/* Patient Navigation */}
-      <PatientNavigation
-        onNavigate={navigate}
-        activePage="games"
-      />
+    <div className="min-h-screen bg-[#FBF8F2] text-[#20261F] font-sans">
+      <PatientNavigation onNavigate={navigate} activePage="games" />
 
-      {/* Voice Assistant */}
       <div className="mt-8 flex flex-col items-center px-6">
-        <button
-          type="button"
-          onClick={handleVoicePress}
-          aria-label={
-            voiceState === "idle"
-              ? "Tap to speak. Voice commands are not connected yet."
-              : voiceCopy.label
-          }
-          aria-pressed={voiceState !== "idle"}
-          className="flex items-center justify-center rounded-full border-4 shadow-md active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
-          style={{
-            width: "76px",
-            height: "76px",
-            background:
-              voiceState === "listening"
-                ? "#F3E7D0"
-                : "#2F6F62",
-            borderColor:
-              voiceState === "listening"
-                ? "#C97A2B"
-                : "#24594F",
-            color:
-              voiceState === "listening"
-                ? "#2F6F62"
-                : "#FFFFFF",
-          }}
-        >
-          <Mic
-            className={`h-9 w-9 ${
-              voiceState === "listening"
-                ? "motion-safe:animate-pulse motion-reduce:animate-none"
-                : ""
-            }`}
-            aria-hidden="true"
-          />
+        <button type="button" onClick={handleVoicePress} aria-label={voiceState === "idle"? "Tap to speak. Voice commands are not connected yet.": voiceCopy.label} aria-pressed={voiceState !== "idle"} className={["flex h-[76px] w-[76px] items-center justify-center rounded-full border-4 shadow-md active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2", voiceState === "listening" ? "border-[#C97A2B] bg-[#F3E7D0] text-[#2F6F62]" : "border-[#24594F] bg-[#2F6F62] text-white", ].join(" ")}>
+          <Mic className={[ "h-9 w-9", voiceState === "listening" ? "motion-safe:animate-pulse motion-reduce:animate-none" : "", ].join(" ")} aria-hidden="true"/>
         </button>
-
-        <p
-          className="mt-3 text-center text-lg font-bold"
-          aria-live="polite"
-        >
-          {voiceCopy.label}
-        </p>
-
-        {voiceCopy.support ? (
-          <p
-            className="mt-1 max-w-sm text-center text-base"
-            style={{ color: "#5B6459" }}
-          >
-            {voiceCopy.support}
-          </p>
-        ) : null}
-
+        <p className="mt-3 text-center text-lg font-bold" aria-live="polite">{voiceCopy.label}</p>
+        {voiceCopy.support ? (<p className="mt-1 max-w-sm text-center text-base text-[#5B6459]">{voiceCopy.support}</p>) : null}
         {voiceState === "not_understood" ? (
-          <button
-            type="button"
-            onClick={() => setVoiceState("idle")}
-            className="mt-4 rounded-full px-6 py-3 text-lg font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
-            style={{ background: "#2F6F62" }}
-          >
-            Try Again
-          </button>
-        ) : null}
+        <button type="button" onClick={() => setVoiceState("idle")} className="mt-4 rounded-full bg-[#2F6F62] px-6 py-3 text-lg font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2">Try Again</button>) : null}
       </div>
 
-      {/* Games */}
-      <main className="mx-auto mt-10 max-w-6xl px-6">
-        <h1 className="text-center text-4xl font-bold sm:text-5xl">
-          Games
-        </h1>
-
-        <p
-          className="mx-auto mt-3 max-w-xl text-center text-xl"
-          style={{ color: "#5B6459" }}
-        >
-          Choose an activity to exercise your mind.
-        </p>
+      <main className="mx-auto mt-8 max-w-6xl px-6 pb-12">
+        <div className="mb-8 rounded-3xl border border-[#E4DCC8] bg-[#F7F3EC] px-6 py-8 text-center shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2F6F62]"> Activities
+          </p>
+          <h1 className="mt-3 text-4xl font-bold sm:text-5xl">Games</h1>
+          <p className="mx-auto mt-3 max-w-xl text-lg text-[#5B6459]">Choose an activity to exercise your mind.
+          </p>
+        </div>
 
         <ul className="mt-10 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 lg:grid-cols-3">
           {GAMES.map((game) => {
             const Icon = game.icon;
-            const isComingSoon =
-              comingSoonId === game.id;
+            const isComingSoon = comingSoonId === game.id;
 
             return (
-              <li
-                key={game.id}
-                className="flex"
-              >
-                <article
-                  className="flex h-full w-full flex-col items-center rounded-3xl p-6 text-center shadow-sm"
-                  style={{
-                    background: "#EFEEE6",
-                    border: "2px solid #E4DCC8",
-                  }}
-                >
-                  {/* Game Icon / Image */}
-                  <div
-                    className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full"
-                    style={{
-                      background: "#F3E7D0",
-                      border: "3px solid #E4DCC8",
-                    }}
-                  >
+              <li key={game.id} className="flex">
+                <article className="flex h-full w-full flex-col items-center rounded-3xl border-2 border-[#E4DCC8] bg-[#EFEEE6] p-6 text-center shadow-sm">
+                  <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-[3px] border-[#E4DCC8] bg-[#F3E7D0]">
                     {game.image ? (
-                      <img
-                        src={game.image}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
+                      <img src={game.image} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <Icon
-                        className="h-12 w-12"
-                        style={{ color: "#2F6F62" }}
-                        aria-hidden="true"
-                      />
+                      <Icon className="h-12 w-12 text-[#2F6F62]" aria-hidden="true" />
                     )}
                   </div>
 
-                  {/* Category + Difficulty */}
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                    <p
-                      className="rounded-full px-3 py-1 text-base font-bold"
-                      style={{
-                        background: "#F3E7D0",
-                        color: "#8A4E12",
-                      }}
-                    >
-                      {game.category}
-                    </p>
-
-                    <p
-                      className="rounded-full px-3 py-1 text-base font-bold"
-                      style={{
-                        background: "#FFFFFF",
-                        color: "#2F6F62",
-                        border: "2px solid #C9C2B2",
-                      }}
-                    >
-                      {game.difficultyLabel}
-                    </p>
+                    <p className="rounded-full bg-[#F3E7D0] px-3 py-1 text-base font-bold text-[#8A4E12]">{game.category}</p>
+                    <p className="rounded-full border-2 border-[#C9C2B2] bg-white px-3 py-1 text-base font-bold text-[#2F6F62]">{game.difficultyLabel}</p>
                   </div>
 
-                  {/* Game Name */}
-                  <h2 className="mt-4 text-2xl font-bold">
-                    {game.name}
-                  </h2>
-
-                  {/* Game Description */}
-                  <p
-                    className="mt-2 flex-1 text-lg leading-snug"
-                    style={{ color: "#5B6459" }}
-                  >
-                    {game.description}
-                  </p>
-
-                  {/* Play / Coming Soon */}
+                  <h2 className="mt-4 text-2xl font-bold">{game.name}</h2>
+                  <p className="mt-2 flex-1 text-lg leading-snug text-[#5B6459]">{game.description}</p>
                   {isComingSoon ? (
-                    <p
-                      id={`${game.id}-coming-soon`}
-                      className="mt-6 w-full rounded-full py-4 text-xl font-bold"
-                      style={{
-                        background: "#FFFFFF",
-                        color: "#5B6459",
-                        border: "2px solid #C9C2B2",
-                      }}
-                      role="status"
-                    >
-                      Coming soon
-                    </p>
+                    <p id={`${game.id}-coming-soon`} className="mt-6 w-full rounded-full border-2 border-[#C9C2B2] bg-white py-4 text-xl font-bold text-[#5B6459]" role="status"> Coming soon</p>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setComingSoonId(game.id)
-                      }
-                      className="mt-6 w-full rounded-full py-4 text-xl font-bold text-white shadow-sm active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
-                      style={{
-                        background: "#2F6F62",
-                      }}
-                    >
-                      Play
-                    </button>
+                    <button type="button" onClick={() => setComingSoonId(game.id)} className="mt-6 w-full rounded-full bg-[#2F6F62] py-4 text-xl font-bold text-white shadow-sm active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"> Play</button>
                   )}
                 </article>
               </li>

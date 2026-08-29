@@ -1,14 +1,5 @@
 import { useState } from "react";
-import {
-  ArrowLeft,
-  Bot,
-  Send,
-  Sparkles,
-  User,
-  Heart,
-  Lightbulb,
-  MessageCircle,
-} from "lucide-react";
+import {ArrowLeft,Bot,Send,Sparkles,User,Heart,Lightbulb,MessageCircle,} from "lucide-react";
 
 const starterQuestions = [
   "How can I support someone with memory difficulties?",
@@ -29,56 +20,27 @@ export default function AIHelpbot({ onNavigate }) {
 
   const sendMessage = (messageText) => {
     const text = messageText.trim();
-
     if (!text) return;
-
-    const userMessage = {
-      id: Date.now(),
-      sender: "user",
-      text,
-    };
-
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      userMessage,
-    ]);
-
+    const userMessage = {id: crypto.randomUUID(),sender: "user",text,};
+    setMessages((currentMessages) => [...currentMessages,userMessage,]);
     setInput("");
-
     setTimeout(() => {
-      const botMessage = {
-        id: Date.now() + 1,
-        sender: "bot",
-        text: getBotResponse(text),
-      };
-
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        botMessage,
-      ]);
-    }, 500);
+      const botMessage = { id: crypto.randomUUID(),sender: "bot",text: getBotResponse(text),};
+      setMessages((currentMessages) => [...currentMessages,botMessage,]);
+      }, 500);
   };
 
   const getBotResponse = (text) => {
     const message = text.toLowerCase();
+    if (message.includes("medicine") ||message.includes("medication")) 
+    {return "For medication-related concerns, you can use the Reminder page to help organize scheduled reminders. Always follow the instructions provided by the elder's healthcare professional for medical decisions.";}
+
+    if (message.includes("confused") ||message.includes("confusion")) 
+    {return "Try to stay calm and speak slowly using simple, familiar language. Avoid giving too many instructions at once. A familiar environment and consistent routine can also help reduce confusion.";}
 
     if (
-      message.includes("medicine") ||
-      message.includes("medication")
-    ) {
-      return "For medication-related concerns, you can use the Reminder page to help organize scheduled reminders. Always follow the instructions provided by the elder's healthcare professional for medical decisions.";
-    }
-
-    if (
-      message.includes("confused") ||
-      message.includes("confusion")
-    ) {
-      return "Try to stay calm and speak slowly using simple, familiar language. Avoid giving too many instructions at once. A familiar environment and consistent routine can also help reduce confusion.";
-    }
-
-    if (
-      message.includes("routine") ||
-      message.includes("schedule")
+     message.includes("routine") ||
+     message.includes("schedule")
     ) {
       return "A consistent daily routine can be helpful. You can plan regular times for meals, activities, rest, and reminders. Keeping routines simple and familiar is often easier to follow.";
     }

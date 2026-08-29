@@ -83,22 +83,10 @@ export default function Reminder({ onNavigate }) {
     });
 
   const [voiceState, setVoiceState] = useState("idle");
-
-  // Tasks that are still waiting to be completed
   const [reminders, setReminders] = useState(REMINDERS);
-
-  // Tasks that have been completed
   const [completedTasks, setCompletedTasks] = useState([]);
-
-  // Controls the celebration animation
   const [showCelebration, setShowCelebration] = useState(false);
-
   const voiceCopy = VOICE_COPY[voiceState];
-
-  // --------------------------------------------------
-  // VOICE BUTTON
-  // --------------------------------------------------
-
   const handleVoicePress = () => {
     if (voiceState === "idle") {
       setVoiceState("listening");
@@ -124,51 +112,26 @@ export default function Reminder({ onNavigate }) {
     }
   };
 
-  // --------------------------------------------------
-  // MARK TASK AS DONE
-  // --------------------------------------------------
-
   const markAsDone = (reminder) => {
-    // Remove the task from today's pending tasks
     setReminders((currentReminders) =>
       currentReminders.filter(
         (currentReminder) =>
           currentReminder.id !== reminder.id
       )
     );
-
-    // Move the task to the completed list
     setCompletedTasks((currentCompleted) => [
       ...currentCompleted,
-      {
-        ...reminder,
-        completedAt: new Date(),
-      },
+      {...reminder,completedAt: new Date(),},
     ]);
 
-    // Show celebration
     setShowCelebration(true);
-
-    // Hide celebration after 1.8 seconds
     setTimeout(() => {
       setShowCelebration(false);
     }, 1800);
   };
 
-  // --------------------------------------------------
-  // UNDO COMPLETED TASK
-  // --------------------------------------------------
 
-  const undoCompletedTask = (task) => {
-    // Remove the task from completed tasks
-    setCompletedTasks((currentCompleted) =>
-      currentCompleted.filter(
-        (completedTask) =>
-          completedTask.id !== task.id
-      )
-    );
-
-    // Put the task back into pending tasks
+  const undoCompletedTask = (task) => {setCompletedTasks((currentCompleted) =>currentCompleted.filter((completedTask) =>completedTask.id !== task.id));
     setReminders((currentReminders) => [
       ...currentReminders,
       task,
@@ -177,18 +140,12 @@ export default function Reminder({ onNavigate }) {
 
   return (
     <div
-      className="theme-page min-h-screen pb-16"
+      className="min-h-screen bg-[#FBF8F2] text-[#20261F]"
       style={{
-        background: "#FBF8F2",
-        color: "#20261F",
         fontFamily:
           "Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif",
       }}
     >
-      {/* ==================================================
-          PATIENT NAVIGATION
-          ================================================== */}
-
       <PatientNavigation
         onNavigate={navigate}
         activePage="reminders"

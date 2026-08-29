@@ -16,57 +16,31 @@ const NAV_ITEMS = [
   { id: "profile", label: "Profile", path: "/profile", icon: UserRound },
 ];
 
-export default function PatientNavigation({ onNavigate, activePage }) {
-  const navigate = onNavigate ?? ((nextPath) => {
-    window.location.href = nextPath;
-  });
+export default function PatientNavigation({ onNavigate, onLogout, activePage }) { const navigate = onNavigate ?? ((nextPath) => {window.location.href = nextPath; });
 
   return (
-    <nav
-      className="border-b px-3 py-3 sm:px-6"
-      style={{
-        borderColor: "#E4DCC8",
-        background: "#EFEEE6",
-      }}
-      aria-label="Patient pages"
-    >
-      <ul className="mx-auto grid max-w-3xl list-none grid-cols-3 gap-2 p-0 sm:grid-cols-6">
+    <nav className="border-b border-[#E4DCC8] bg-[#EFEEE6] px-3 py-3 sm:px-6" aria-label="Patient pages">
+      <ul className="mx-auto grid max-w-3xl list-none grid-cols-3 gap-2 p-0 sm:grid-cols-7">
         {NAV_ITEMS.map(({ id, label, path, icon: Icon }) => {
           const isActive = activePage === id;
 
           return (
             <li key={id}>
-              <button
-                type="button"
-                onClick={() => navigate(path)}
-                aria-current={isActive ? "page" : undefined}
-                className="flex w-full flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-base active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
-                style={
-                  isActive
-                    ? {
-                        background: "#F3E7D0",
-                        border: "3px solid #2F6F62",
-                        color: "#20261F",
-                        fontWeight: 700,
-                      }
-                    : {
-                        background: "#FFFFFF",
-                        border: "2px solid #E4DCC8",
-                        color: "#5B6459",
-                        fontWeight: 600,
-                      }
-                }
-              >
-                <Icon
-                  className="h-7 w-7"
-                  strokeWidth={2.5}
-                  aria-hidden="true"
-                />
+              <button type="button" onClick={() => navigate(path)} aria-current={isActive ? "page" : undefined} className={[ "flex w-full flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-base active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2", isActive  ? "border-[3px] border-[#2F6F62] bg-[#F3E7D0] font-bold text-[#20261F]"  : "border-2 border-[#E4DCC8] bg-white font-semibold text-[#5B6459]", ].join(" ")}>
+                <Icon className="h-7 w-7" strokeWidth={2.5} aria-hidden="true"/>
                 <span>{label}</span>
               </button>
             </li>
           );
         })}
+        {onLogout && (
+          <li>
+            <button type="button" onClick={onLogout} className="flex w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-[#E5B1B1] bg-[#FFF0F0] px-2 py-3 text-base font-bold text-[#7A2A2A] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2">
+              <span className="text-lg">↩</span>
+              <span>Logout</span>
+            </button>
+          </li>
+        )}
       </ul>
     </nav>
   );
