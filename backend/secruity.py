@@ -23,12 +23,14 @@ password_hash = PasswordHash.recommended()
 class Token(BaseModel):
     access_token: str
     token_type: str
+    role: str | None = None
 
 
 class User(BaseModel):
     username: str
     email: str | None = None
     full_name: str | None = None
+    role: str | None = None
     disabled: bool = False
 
 
@@ -37,6 +39,7 @@ class UserSignup(BaseModel):
     email: str
     full_name: str
     password: str
+    role: str = "patient"
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -47,8 +50,17 @@ def get_password_hash(password: str) -> str:
     return password_hash.hash(password)
 
 
-def authenticate_user(username: str, password: str) -> User | None:
-    user = users_collection.find_one({"username": username})
+def authenticate_user(identifier: str, password: str, role: str | None = None) -> User | None:
+    query = {
+        "$or": [
+            {"username": identifier},
+            {"email": identifier},
+        ]
+    }
+    if role:
+        query["role"] = role
+
+    user = users_collection.find_one(query)
     if not user or not verify_password(password, user["hashed_password"]):
         return None
 
@@ -56,6 +68,7 @@ def authenticate_user(username: str, password: str) -> User | None:
         username=user["username"],
         email=user.get("email"),
         full_name=user.get("full_name"),
+        role=user.get("role", "patient"),
         disabled=user.get("disabled", False),
     )
 
@@ -90,6 +103,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
         username=user["username"],
         email=user.get("email"),
         full_name=user.get("full_name"),
+        role=user.get("role", "patient"),
         disabled=user.get("disabled", False),
     )
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {Mic,Layers,Shapes,ListOrdered,Link2,Puzzle,Dice5,} from "lucide-react";
+import {Layers,Shapes,ListOrdered,Link2,Puzzle,Dice5,} from "lucide-react";
 import PatientNavigation from "./PatientNavigation";
 
 const GAMES = [
@@ -59,25 +59,6 @@ const GAMES = [
   },
 ];
 
-const VOICE_COPY = {
-  idle: {
-    label: "Tap to speak",
-    support: "",
-  },
-  listening: {
-    label: "Listening...",
-    support: "Tell me what you would like to do.",
-  },
-  processing: {
-    label: "Understanding...",
-    support: "",
-  },
-  not_understood: {
-    label: "I didn't understand that.",
-    support: "Please try again.",
-  },
-};
-
 export default function GamePage({ onNavigate }) {
   const navigate =
     onNavigate ??
@@ -85,45 +66,11 @@ export default function GamePage({ onNavigate }) {
       window.location.href = nextPath;
     });
 
-  const [voiceState, setVoiceState] = useState("idle");
   const [comingSoonId, setComingSoonId] = useState(null);
-
-  const voiceCopy = VOICE_COPY[voiceState];
-
-  const handleVoicePress = () => {
-    if (voiceState === "idle") {
-      setVoiceState("listening");
-      return;
-    }
-
-    if (voiceState === "listening") {
-      setVoiceState("processing");
-      return;
-    }
-
-    if (voiceState === "processing") {
-      setVoiceState("not_understood");
-      return;
-    }
-
-    if (voiceState === "not_understood") {
-      setVoiceState("idle");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#FBF8F2] text-[#20261F] font-sans">
       <PatientNavigation onNavigate={navigate} activePage="games" />
-
-      <div className="mt-8 flex flex-col items-center px-6">
-        <button type="button" onClick={handleVoicePress} aria-label={voiceState === "idle"? "Tap to speak. Voice commands are not connected yet.": voiceCopy.label} aria-pressed={voiceState !== "idle"} className={["flex h-[76px] w-[76px] items-center justify-center rounded-full border-4 shadow-md active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2", voiceState === "listening" ? "border-[#C97A2B] bg-[#F3E7D0] text-[#2F6F62]" : "border-[#24594F] bg-[#2F6F62] text-white", ].join(" ")}>
-          <Mic className={[ "h-9 w-9", voiceState === "listening" ? "motion-safe:animate-pulse motion-reduce:animate-none" : "", ].join(" ")} aria-hidden="true"/>
-        </button>
-        <p className="mt-3 text-center text-lg font-bold" aria-live="polite">{voiceCopy.label}</p>
-        {voiceCopy.support ? (<p className="mt-1 max-w-sm text-center text-base text-[#5B6459]">{voiceCopy.support}</p>) : null}
-        {voiceState === "not_understood" ? (
-        <button type="button" onClick={() => setVoiceState("idle")} className="mt-4 rounded-full bg-[#2F6F62] px-6 py-3 text-lg font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2">Try Again</button>) : null}
-      </div>
 
       <main className="mx-auto mt-8 max-w-6xl px-6 pb-12">
         <div className="mb-8 rounded-3xl border border-[#E4DCC8] bg-[#F7F3EC] px-6 py-8 text-center shadow-sm">
@@ -160,7 +107,19 @@ export default function GamePage({ onNavigate }) {
                   {isComingSoon ? (
                     <p id={`${game.id}-coming-soon`} className="mt-6 w-full rounded-full border-2 border-[#C9C2B2] bg-white py-4 text-xl font-bold text-[#5B6459]" role="status"> Coming soon</p>
                   ) : (
-                    <button type="button" onClick={() => setComingSoonId(game.id)} className="mt-6 w-full rounded-full bg-[#2F6F62] py-4 text-xl font-bold text-white shadow-sm active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"> Play</button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (game.id === "find-the-pattern") {
+                          navigate("/pattern-game");
+                          return;
+                        }
+                        setComingSoonId(game.id);
+                      }}
+                      className="mt-6 w-full rounded-full bg-[#2F6F62] py-4 text-xl font-bold text-white shadow-sm active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
+                    >
+                      Play
+                    </button>
                   )}
                 </article>
               </li>

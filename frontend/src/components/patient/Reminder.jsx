@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Mic,
   Pill,
   Droplets,
   CalendarDays,
@@ -56,25 +55,6 @@ const REMINDERS = [
   },
 ];
 
-const VOICE_COPY = {
-  idle: {
-    label: "Tap to speak",
-    support: "",
-  },
-  listening: {
-    label: "Listening...",
-    support: "Tell me what you would like to do.",
-  },
-  processing: {
-    label: "Understanding...",
-    support: "",
-  },
-  not_understood: {
-    label: "I didn't understand that.",
-    support: "Please try again.",
-  },
-};
-
 export default function Reminder({ onNavigate }) {
   const navigate =
     onNavigate ??
@@ -82,35 +62,9 @@ export default function Reminder({ onNavigate }) {
       window.location.href = nextPath;
     });
 
-  const [voiceState, setVoiceState] = useState("idle");
   const [reminders, setReminders] = useState(REMINDERS);
   const [completedTasks, setCompletedTasks] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
-  const voiceCopy = VOICE_COPY[voiceState];
-  const handleVoicePress = () => {
-    if (voiceState === "idle") {
-      setVoiceState("listening");
-      return;
-    }
-
-    if (voiceState === "listening") {
-      setVoiceState("processing");
-
-      setTimeout(() => {
-        setVoiceState("not_understood");
-      }, 1000);
-
-      return;
-    }
-
-    if (voiceState === "processing") {
-      return;
-    }
-
-    if (voiceState === "not_understood") {
-      setVoiceState("idle");
-    }
-  };
 
   const markAsDone = (reminder) => {
     setReminders((currentReminders) =>
@@ -213,74 +167,6 @@ export default function Reminder({ onNavigate }) {
           </span>
         </div>
       ) : null}
-
-      {/* ==================================================
-          VOICE ASSISTANT
-          ================================================== */}
-
-      <div className="mt-8 flex flex-col items-center px-6">
-        <button
-          type="button"
-          onClick={handleVoicePress}
-          aria-label={voiceCopy.label}
-          aria-pressed={voiceState !== "idle"}
-          className="flex items-center justify-center rounded-full border-4 shadow-md active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
-          style={{
-            width: "76px",
-            height: "76px",
-            background:
-              voiceState === "listening"
-                ? "#F3E7D0"
-                : "#2F6F62",
-            borderColor:
-              voiceState === "listening"
-                ? "#C97A2B"
-                : "#24594F",
-            color:
-              voiceState === "listening"
-                ? "#2F6F62"
-                : "#FFFFFF",
-          }}
-        >
-          <Mic
-            className={`h-9 w-9 ${
-              voiceState === "listening"
-                ? "motion-safe:animate-pulse motion-reduce:animate-none"
-                : ""
-            }`}
-            aria-hidden="true"
-          />
-        </button>
-
-        <p
-          className="mt-3 text-center text-lg font-bold"
-          aria-live="polite"
-        >
-          {voiceCopy.label}
-        </p>
-
-        {voiceCopy.support ? (
-          <p
-            className="mt-1 max-w-sm text-center text-base"
-            style={{ color: "#5B6459" }}
-          >
-            {voiceCopy.support}
-          </p>
-        ) : null}
-
-        {voiceState === "not_understood" ? (
-          <button
-            type="button"
-            onClick={() => setVoiceState("idle")}
-            className="mt-4 rounded-full px-6 py-3 text-lg font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
-            style={{
-              background: "#2F6F62",
-            }}
-          >
-            Try Again
-          </button>
-        ) : null}
-      </div>
 
       {/* ==================================================
           MAIN CONTENT

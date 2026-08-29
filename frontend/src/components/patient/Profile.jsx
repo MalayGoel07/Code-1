@@ -1,39 +1,7 @@
-import { useState } from "react";
-import {
-  Mic,
-  UserRound,
-  Pencil,
-  CalendarDays,
-  Languages,
-  Heart,
-  Gamepad2,
-  BookOpen,
-  Bell,
-  ShieldCheck,
-  UsersRound,
-  Check,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import {UserRound,Pencil,CalendarDays,Languages,Heart,Gamepad2,BookOpen,Bell,ShieldCheck,UsersRound,Check,} from "lucide-react";
 
 import PatientNavigation from "./PatientNavigation";
-
-const VOICE_COPY = {
-  idle: {
-    label: "Tap to speak",
-    support: "",
-  },
-  listening: {
-    label: "Listening...",
-    support: "Tell me what you would like to do.",
-  },
-  processing: {
-    label: "Understanding...",
-    support: "",
-  },
-  not_understood: {
-    label: "I didn't understand that.",
-    support: "Please try again.",
-  },
-};
 
 export default function Profile({ onNavigate }) {
   const navigate =
@@ -42,38 +10,87 @@ export default function Profile({ onNavigate }) {
       window.location.href = nextPath;
     });
 
-  const [voiceState, setVoiceState] = useState("idle");
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({ name: "Kong", age: "72", language: "English", caregiver: "Family Caregiver",});
-  const voiceCopy = VOICE_COPY[voiceState];
-  const handleVoicePress = () => {
-    if (voiceState === "idle") {setVoiceState("listening");return;}
-    if (voiceState === "listening") {setVoiceState("processing");
-      setTimeout(() => {setVoiceState("not_understood");}, 1000);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [profile, setProfile] = useState({
+    name: "",
+    age: "",
+    language: "English",
+    caregiver_email: "",
+    games_played: [],
+  });
+
+  const userName =typeof window !== "undefined" ? window.localStorage.getItem("full_name") || "there" : "there";
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      navigate("/logsign");
       return;
     }
-    if (voiceState === "processing") {return; }
-    if (voiceState === "not_understood") {setVoiceState("idle"); }
+
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:8000/patient/me", {headers: {Authorization: `Bearer ${token}`,},});
+        if (!response.ok) {throw new Error("Failed to load profile");}
+        const data = await response.json();
+        setProfile({
+          name: data.full_name || data.username || "",
+          age: data.age !== null && data.age !== undefined ? String(data.age) : "",
+          language: data.preferred_language || "English",
+          caregiver_email: data.caregiver_email || data.caregiver || "",
+          games_played: Array.isArray(data.games_played) ? data.games_played : [],
+        });
+
+        if (data.full_name) {localStorage.setItem("full_name", data.full_name);}} 
+        catch (err) {setError(err.message || "Unable to load profile.");} 
+        finally {setLoading(false);}
+    };
+
+    fetchProfile();
+  }, [navigate]);
+
+  const handleProfileChange = (field, value) => {setProfile((currentProfile) => ({ ...currentProfile, [field]: value }));};
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      setError("");
+
+      const token = localStorage.getItem("access_token");
+      const response = await fetch("http://localhost:8000/patient/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          full_name: profile.name,
+          age: profile.age === "" ? null : Number(profile.age),
+          preferred_language: profile.language,
+          caregiver_email: profile.caregiver_email,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.detail || "Profile update failed");
+      }
+
+      localStorage.setItem("full_name", profile.name || userName || "there");
+      setIsEditing(false);
+    } catch (err) {
+      setError(err.message || "Unable to save profile.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleProfileChange = (field, value) => {setProfile((currentProfile) => ({...currentProfile, [field]: value,}));};
   return (
     <div  className="theme-page min-h-screen pb-16"  style={{ background: "#FBF8F2", color: "#20261F", fontFamily: "Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif",}}>
       <PatientNavigation onNavigate={navigate} activePage="profile"/>
-
-      <div className="mt-8 flex flex-col items-center px-6">
-        <button type="button" onClick={handleVoicePress} aria-label={voiceCopy.label} aria-pressed={voiceState !== "idle"} className="flex items-center justify-center rounded-full border-4 shadow-md active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2" style={{ width: "76px", height: "76px", background: voiceState === "listening"  ? "#F3E7D0"  : "#2F6F62", borderColor:   voiceState === "listening"     ? "#C97A2B"     : "#24594F", color: voiceState === "listening"  ? "#2F6F62"  : "#FFFFFF", }}>
-          <Mic className={`h-9 w-9 ${ voiceState === "listening"  ? "motion-safe:animate-pulse motion-reduce:animate-none"  : "" }`} aria-hidden="true" />
-        </button>
-        <p className="mt-3 text-center text-lg font-bold" aria-live="polite"> {voiceCopy.label}</p>
-        {voiceCopy.support ? (
-          <p className="mt-1 max-w-sm text-center text-base" style={{ color: "#5B6459" }}> {voiceCopy.support}</p>
-        ) : null}
-
-        {voiceState === "not_understood" ? (
-          <button type="button" onClick={() => setVoiceState("idle")} className="mt-4 rounded-full px-6 py-3 text-lg font-bold text-white active:scale-95" style={{   background: "#2F6F62", }}>  Try Again</button>
-        ) : null}
-      </div>
 
       <main className="mx-auto mt-10 max-w-5xl px-6">
         <section className="text-center">
@@ -87,17 +104,20 @@ export default function Profile({ onNavigate }) {
             <div className="flex h-32 w-32 items-center justify-center rounded-full" style={{ background: "#F3E7D0", border: "4px solid #2F6F62", color: "#2F6F62", }}>
               <UserRound className="h-16 w-16" aria-hidden="true" />
             </div> 
-            <h2 className="mt-5 text-3xl font-bold">{profile.name}</h2>
+            <h2 className="mt-5 text-3xl font-bold">{userName}</h2>
             <p className="mt-1 text-lg" style={{ color: "#5B6459" }}>Patient</p>
           </div>
 
-          <button type="button" onClick={() => setIsEditing(!isEditing) } className="mx-auto mt-6 flex items-center justify-center gap-2 rounded-full px-7 py-3 text-lg font-bold active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2" style={{ background: isEditing ? "#FFFFFF" : "#2F6F62", color: isEditing   ? "#2F6F62"   : "#FFFFFF", border: isEditing   ? "2px solid #2F6F62"   : "2px solid #2F6F62", }}>
-            {isEditing ? (
+          <button type="button" onClick={() => (isEditing ? handleSaveProfile() : setIsEditing(true)) } className="mx-auto mt-6 flex items-center justify-center gap-2 rounded-full px-7 py-3 text-lg font-bold active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70" style={{ background: isEditing ? "#FFFFFF" : "#2F6F62", color: isEditing   ? "#2F6F62"   : "#FFFFFF", border: isEditing   ? "2px solid #2F6F62"   : "2px solid #2F6F62", }} disabled={saving || loading}>
+            {saving ? (
+              <>Saving...</>
+            ) : isEditing ? (
               <><Check className="h-5 w-5" aria-hidden="true"/>Done Editing</>
             ) : (
               <> <Pencil className="h-5 w-5" aria-hidden="true"/>Edit Profile</>
             )}
           </button>
+          {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl">
@@ -113,7 +133,7 @@ export default function Profile({ onNavigate }) {
                   {isEditing ? (
                     <input type="text" value={profile.name} onChange={(event) => handleProfileChange( "name", event.target.value ) } className="mt-1 w-full rounded-xl border-2 bg-white px-3 py-2 text-lg font-bold outline-none focus:ring-4 focus:ring-[#2F6F62]/20" style={{   borderColor: "#C9C2B2", }}/>
                   ) : (
-                    <p className="mt-1 text-xl font-bold">{profile.name}</p>
+                    <p className="mt-1 text-xl font-bold">{profile.name || userName}</p>
                   )}
                 </div>
               </div>
@@ -170,10 +190,10 @@ export default function Profile({ onNavigate }) {
                   <UsersRound className="h-7 w-7" aria-hidden="true"/>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-base font-bold" style={{ color: "#5B6459" }}>Caregiver</p>
+                  <p className="text-base font-bold" style={{ color: "#5B6459" }}>Caregiver's Email</p>
                   {isEditing ? (
-                    <input type="text" value={profile.caregiver} onChange={(event) => handleProfileChange( "caregiver",  event.target.value ) } className="mt-1 w-full rounded-xl border-2 bg-white px-3 py-2 text-lg font-bold outline-none focus:ring-4 focus:ring-[#2F6F62]/20" style={{   borderColor: "#C9C2B2", }}/>
-                  ) : (<p className="mt-1 text-xl font-bold">{profile.caregiver}</p>
+                    <input type="text" value={profile.caregiver_email} onChange={(event) => handleProfileChange( "caregiver_email",  event.target.value ) } className="mt-1 w-full rounded-xl border-2 bg-white px-3 py-2 text-lg font-bold outline-none focus:ring-4 focus:ring-[#2F6F62]/20" style={{   borderColor: "#C9C2B2", }}/>
+                  ) : (<p className="mt-1 text-xl font-bold">{profile.caregiver_email}</p>
                   )}
                 </div>
               </div>
@@ -186,8 +206,8 @@ export default function Profile({ onNavigate }) {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div className="rounded-3xl p-6 text-center" style={{background: "#E4F0EC", border: "2px solid #2F6F62",}} >
               <Gamepad2 className="mx-auto h-10 w-10" style={{ color: "#2F6F62" }} aria-hidden="true"/>
-              <p className="mt-3 text-3xl font-bold">0</p>
-              <p className="mt-1 text-lg font-bold" style={{ color: "#5B6459" }}>  Games Completed</p>
+              <p className="mt-3 text-3xl font-bold">{profile.games_played.length}</p>
+              <p className="mt-1 text-lg font-bold" style={{ color: "#5B6459" }}>Games Completed</p>
             </div>
             <div className="rounded-3xl p-6 text-center" style={{ background: "#F3E7D0", border: "2px solid #C97A2B", }}>
               <BookOpen className="mx-auto h-10 w-10" style={{ color: "#C97A2B" }} aria-hidden="true"/>
@@ -201,6 +221,19 @@ export default function Profile({ onNavigate }) {
               <p className="mt-1 text-lg font-bold" style={{ color: "#5B6459" }}>Tasks Completed</p>
             </div>
           </div>
+
+          {profile.games_played.length > 0 && (
+            <div className="mt-6 rounded-3xl p-5" style={{ background: "#EFEEE6", border: "2px solid #E4DCC8" }}>
+              <p className="mb-3 text-xl font-bold">Completed Games</p>
+              <ul className="space-y-2">
+                {profile.games_played.map((game, index) => (
+                  <li key={`${game.game_id || game.game_name || "game"}-${index}`} className="rounded-2xl border border-[#C9C2B2] bg-white px-4 py-3 text-base font-semibold" style={{ color: "#20261F" }}>
+                    {game.game_name || game.game_id || "Game"}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
 
 

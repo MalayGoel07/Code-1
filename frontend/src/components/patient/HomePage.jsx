@@ -3,7 +3,6 @@ import {
   Gamepad2,
   MessageCircle,
   BookOpen,
-  Mic,
   Smile,
   Meh,
   Frown,
@@ -36,25 +35,6 @@ const PRIMARY_ACTIVITIES = [
   },
 ];
 
-const VOICE_COPY = {
-  idle: {
-    label: "Tap to speak",
-    support: "",
-  },
-  listening: {
-    label: "Listening...",
-    support: "Tell me what you would like to do.",
-  },
-  processing: {
-    label: "Understanding...",
-    support: "",
-  },
-  error: {
-    label: "I didn't understand that.",
-    support: "Please try again.",
-  },
-};
-
 function getGreeting(hour) {
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
@@ -70,33 +50,9 @@ export default function PatientHome({ onNavigate, onLogout }) {
 
   const [mood, setMood] = useState(null);
   const [reminderDone, setReminderDone] = useState(false);
-  const [voiceState, setVoiceState] = useState("idle");
 
   const hour = new Date().getHours();
-  const userName =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem("full_name") || "there"
-      : "there";
-  const voiceCopy = VOICE_COPY[voiceState];
-
-  const handleVoicePress = () => {
-    if (voiceState === "idle") {
-      setVoiceState("listening");
-      return;
-    }
-
-    if (voiceState === "listening") {
-      setVoiceState("processing");
-      return;
-    }
-
-    if (voiceState === "processing") {
-      setVoiceState("error");
-      return;
-    }
-
-    setVoiceState("idle");
-  };
+  const userName =typeof window !== "undefined" ? window.localStorage.getItem("full_name") || "there": "there";
 
   return (
     <div className="min-h-screen bg-[#FBF8F2] text-[#20261F] font-sans">
@@ -142,7 +98,7 @@ export default function PatientHome({ onNavigate, onLogout }) {
           </div>
         </section>
 
-        <section className="mt-8 rounded-3xl border-2 border-[#E4DCC8] bg-[#EFEEE6] p-6 text-center">
+        <section className="mt-8 pb-16 mb-16 rounded-3xl border-2 border-[#E4DCC8] bg-[#EFEEE6] p-6 text-center">
           <p className="text-xl font-bold">How are you feeling today?</p>
           <div className="mt-5 flex justify-center gap-4 sm:gap-6">
             <button type="button" onClick={() => setMood("good")} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2">
@@ -169,13 +125,6 @@ export default function PatientHome({ onNavigate, onLogout }) {
         </section>
       </main>
 
-      <div className="fixed bottom-5 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center">
-        <button type="button" onClick={handleVoicePress} aria-label={ voiceState === "idle"  ? "Tap to speak. Voice commands are not connected yet."  : voiceCopy.label } aria-pressed={voiceState !== "idle"} className={[ "flex h-[76px] w-[76px] items-center justify-center rounded-full border-4 shadow-lg active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2", voiceState === "listening"  ? "border-[#C97A2B] bg-[#F3E7D0] text-[#2F6F62]"  : "border-[#24594F] bg-[#2F6F62] text-white", ].join(" ")}>
-          <Mic className={[ "h-9 w-9", voiceState === "listening" ? "motion-safe:animate-pulse motion-reduce:animate-none" : "", ].join(" ")} aria-hidden="true"/>
-        </button>
-
-        <p className="mt-2 text-center text-base font-bold" aria-live="polite">{voiceCopy.label}</p>{voiceCopy.support ? (<p className="max-w-[16rem] text-center text-sm font-semibold text-[#5B6459]">{voiceCopy.support}</p>) : null}{voiceState === "error" ? (<button type="button" onClick={() => setVoiceState("idle")} className="mt-2 rounded-full bg-[#2F6F62] px-5 py-2 text-base font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2" >Try again</button>) : null}
-      </div>
     </div>
   );
 }

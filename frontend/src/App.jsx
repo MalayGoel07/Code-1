@@ -15,6 +15,7 @@ import Reminder from "./components/patient/Reminder";
 import ElderAi from "./components/patient/ElderAi";
 import Story from "./components/patient/Story";
 import Profile from "./components/patient/Profile";
+import PatternGame from "./components/games/pattern";
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname);
@@ -45,6 +46,7 @@ export default function App() {
   const protectedPatientRoutes = [
     "/homepage",
     "/game",
+    "/pattern-game",
     "/elder-ai",
     "/reminder",
     "/profile",
@@ -113,6 +115,10 @@ export default function App() {
 
   if (path === "/game") {
     return <GamePage onNavigate={navigate} />;
+  }
+
+  if (path === "/pattern-game") {
+    return <PatternGame onNavigate={navigate} />;
   }
 
   if (path === "/elder-ai") {

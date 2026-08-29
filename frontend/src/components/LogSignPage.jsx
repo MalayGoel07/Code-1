@@ -43,6 +43,7 @@ export default function LogSignPage({ onNavigate }) {
               email,
               full_name: fullName,
               password,
+              role: role === "caretaker" ? "caretaker" : "patient",
             }),
       });
 
@@ -56,9 +57,9 @@ export default function LogSignPage({ onNavigate }) {
       localStorage.setItem("token_type", data.token_type || "bearer");
       localStorage.setItem("full_name", mode === "signup" ? fullName : email);
 
-      const selectedRole = mode === "signup"
+      const selectedRole = (data.role || (mode === "signup"
         ? (role === "caretaker" ? "caretaker" : "patient")
-        : (localStorage.getItem("user_role") || "patient");
+        : (localStorage.getItem("user_role") || "patient"))).toLowerCase();
 
       localStorage.setItem("user_role", selectedRole);
 
@@ -124,7 +125,7 @@ export default function LogSignPage({ onNavigate }) {
                     Caretaker
                   </label>
                   <label className="flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm cursor-pointer" style={{ background: "#FFFFFF", border: "2px solid #C9C2B2" }}>
-                    <input type="radio" name="role" value="elder" checked={role === "elder"} onChange={e => setRole(e.target.value)} required className="accent-green-700" />
+                    <input type="radio" name="role" value="patient" checked={role === "patient"} onChange={e => setRole(e.target.value)} required className="accent-green-700" />
                     Elder patient
                   </label>
                 </div>
