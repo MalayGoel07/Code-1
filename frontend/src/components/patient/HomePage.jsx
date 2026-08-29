@@ -52,11 +52,33 @@ export default function PatientHome({ onNavigate, onLogout }) {
   const [mood, setMood] = useState(null);
   const [savingMood, setSavingMood] = useState(false);
   const [reminderDone, setReminderDone] = useState(false);
+  const [todayReminder, setTodayReminder] = useState(null);
 
   useEffect(() => {
     const token = window.localStorage.getItem("access_token");
     if (!token) return;
-    api.get("/patient/mood-history", {headers: { Authorization: `Bearer ${token}` }, }).then((data) => {if (data && data.current_mood) {setMood(data.current_mood);window.localStorage.setItem("current_mood", data.current_mood);}}).catch(() => {});}, []);
+
+    api.get("/patient/mood-history", { headers: { Authorization: `Bearer ${token}` } })
+      .then((data) => {
+        if (data && data.current_mood) {
+          setMood(data.current_mood);
+          window.localStorage.setItem("current_mood", data.current_mood);
+        }
+      })
+      .catch(() => {});
+
+    api.get("/patient/reminders", { headers: { Authorization: `Bearer ${token}` } })
+      .then((data) => {
+        const reminders = Array.isArray(data?.reminders) ? data.reminders : [];
+        const nextReminder = reminders[0] || null;
+        setTodayReminder(nextReminder);
+        setReminderDone(!nextReminder && (Number(data?.done_count) || 0) > 0);
+      })
+      .catch(() => {
+        setReminderDone(false);
+        setTodayReminder(null);
+      });
+  }, []);
 
   const saveMoodSelection = async (nextMood) => {
     const token = window.localStorage.getItem("access_token");
@@ -72,6 +94,24 @@ export default function PatientHome({ onNavigate, onLogout }) {
       console.error(error);
     } finally {
       setSavingMood(false);
+    }
+  };
+
+  const handleReminderComplete = async () => {
+    const token = window.localStorage.getItem("access_token");
+    if (!token || !todayReminder) return;
+
+    try {
+      await api.post(
+        "/patient/reminders/complete",
+        { reminder_id: todayReminder.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setReminderDone(true);
+      setTodayReminder(null);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -101,9 +141,25 @@ export default function PatientHome({ onNavigate, onLogout }) {
       <main className="mx-auto max-w-2xl px-6">
         <section className="mt-6 rounded-3xl border-[3px] border-[#C97A2B] bg-[#F3E7D0] p-6">
           <p className="text-lg font-bold text-[#8A4E12]">Today's reminder</p>
-          <p className="mt-2 text-2xl font-bold">{reminderDone ? "Medicine marked as done" : "Take your medicine"}</p>
-          <p className="mt-1 text-lg text-[#6B4A1E]">Due at 8:00 AM</p>
-          <button type="button" onClick={() => setReminderDone(true)} disabled={reminderDone} className={[ "mt-4 w-full rounded-xl py-4 text-xl font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2 disabled:opacity-70", reminderDone ? "bg-[#5B6459]" : "bg-[#C97A2B]", ].join(" ")}>{reminderDone ? "Done for now" : "Mark as Done"}</button>
+          <p className="mt-2 text-2xl font-bold">
+            {reminderDone
+              ? (todayReminder ? "Reminder marked as done" : "Medicine marked as done")
+              : (todayReminder?.title || "Take your medicine")}
+          </p>
+          <p className="mt-1 text-lg text-[#6B4A1E]">
+            {reminderDone ? "No pending reminder left for today." : (todayReminder?.time || "Due at 8:00 AM")}
+          </p>
+          <button
+            type="button"
+            onClick={handleReminderComplete}
+            disabled={reminderDone || !todayReminder}
+            className={[
+              "mt-4 w-full rounded-xl py-4 text-xl font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2 disabled:opacity-70",
+              reminderDone || !todayReminder ? "bg-[#5B6459]" : "bg-[#C97A2B]",
+            ].join(" ")}
+          >
+            {reminderDone ? "Done for now" : (!todayReminder ? "No reminder left" : "Mark as Done")}
+          </button>
         </section>
         <section className="mt-8" aria-labelledby="activities-heading">
           <h2 id="activities-heading" className="text-2xl font-bold">Activities</h2>
