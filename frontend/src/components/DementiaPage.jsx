@@ -146,33 +146,31 @@ export default function DementiaPage({onNavigate}){
     return(
         <div className="theme-page scroll-smooth h-screen overflow-x-hidden overflow-y-auto flex flex-col gap-8" style={{ background: "#FBF8F2", color: "#20261F", fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif" }}>
             <header className="sticky top-0 z-50 border-b backdrop-blur" style={{ borderColor: "#E4DCC8", background: "rgba(255,255,255,0.9)" }}>
-              <nav className="mx-auto flex items-center justify-between p-4">
-                <div className="text-xl font-semibold tracking-tight text-slate-900">
-                  CODE<span style={{ color: "#2F6F62" }}>-1</span>
-                </div>
-                <div className="flex flex-row gap-2">
-                  <a href="#Demnetia" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Demnetia</a>
-                  <a href="#ss" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Sign and Symptoms</a>
-                  <a href="#wtd" className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">What to do?</a>
-                  <button onClick={() => navigate("/")} className="rounded-full px-5 py-2 text-sm font-bold text-white transition hover:opacity-90" style={{ background: "#2F6F62" }}>← Back</button>
+              <nav className="mx-auto flex items-center justify-between p-4 flex-wrap gap-4">
+                <button onClick={() => navigate("/")} className="text-xl font-semibold tracking-tight text-slate-900 bg-transparent border-none cursor-pointer hover:opacity-70 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400">
+                  Maitri
+                </button>
+                <div className="flex flex-row gap-2 flex-wrap justify-center sm:justify-end">
+                  <button onClick={() => document.getElementById('dementia')?.scrollIntoView({behavior: 'smooth'})} className="rounded-full px-3 sm:px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Dementia</button>
+                  <button onClick={() => document.getElementById('signs-symptoms')?.scrollIntoView({behavior: 'smooth'})} className="rounded-full px-3 sm:px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Signs & Symptoms</button>
+                  <button onClick={() => document.getElementById('what-to-do')?.scrollIntoView({behavior: 'smooth'})} className="rounded-full px-3 sm:px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">What to do?</button>
+                  <button onClick={() => navigate("/")} className="rounded-full px-3 sm:px-5 py-2 text-sm font-bold text-white transition hover:opacity-90" style={{ background: "#2F6F62" }}>← Back</button>
                 </div>
               </nav>
             </header>
 
-            <section id="Demnetia" className="scroll-mt-24 mx-auto flex max-w-5xl flex-row items-center justify-center p-8 m-4">
-                <div className="p-4">
+            <section id="dementia" className="scroll-mt-24 mx-auto flex max-w-5xl flex-col sm:flex-row items-center justify-center p-4 sm:p-8 m-4 gap-6">
+                <div className="p-4 flex-1">
                     <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl mb-4">What is dementia?</h1>
-                    <p className="text-xl text-slate-600">Dementia is a general term (not a specific disease) that describes a group of symptoms which negatively impacts memory severe enough to interfere with daily life.
-                        <br></br>Alzheimer’s is the most common form of dementia with 60-80% of cases, while Vascular Dementia is the second most common dementia type. 
-                        Nevertheless, there are many other conditions that cause symptoms of dementia. 
-                        As opposed to Alzheimer’s, some forms of dementia are reversible. 
+                    <p className="text-lg sm:text-xl" style={{ color: "#5B6459" }}>Dementia is a general term (not a specific disease) that describes a group of symptoms which negatively impact memory, severe enough to interfere with daily life.
+                        <br></br><br></br>Alzheimer's is the most common form of dementia with 60–80% of cases, while Vascular Dementia is the second most common dementia type. Nevertheless, there are many other conditions that cause symptoms of dementia. As opposed to Alzheimer's, some forms of dementia are reversible.
                     </p>
                 </div>
               <img src={puzzle} alt="Cognitive games screenshot" className="h-80 w-80 shrink-0 rounded-xl border border-blue-900/40 object-cover" />
             </section>
 
-            <section className="mx-auto flex w-full flex-col items-center justify-center gap-16 p-8 mt-4" style={{ background: "#EFEEE6" }}>
-                <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl m-4">What are the differnent type of Dementia?</h1>
+            <section id="types" className="mx-auto flex w-full flex-col items-center justify-center gap-16 p-4 sm:p-8 mt-4" style={{ background: "#EFEEE6" }}>
+                <h1 className="text-3xl sm:text-5xl font-semibold text-slate-900 m-4 text-center">What are the different types of dementia?</h1>
               {diseases.map((item, index) => (
                 <div key={index} className="w-full max-w-4xl border-b border-slate-400 p-4">
                   <div className="flex w-full cursor-pointer flex-row items-center justify-between" onClick={() => setOpenIndex(openIndex === index ? null : index) }  >
@@ -186,25 +184,25 @@ export default function DementiaPage({onNavigate}){
               ))}
             </section>
 
-            <section id="ss" className="scroll-mt-24 mx-auto flex flex-col max-w-6xl items-center justify-center p-8 mt-4">
-                <div className="p-4 flex flex-row mb-4">
-                    <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl mb-4">What are the sign and symptoms of Dementia?</h1>
-                    <p className="text-2xl text-slate-600 max-w-xl">Remember that Dementia is a general term and not a specific disease like Alzheimer’s. Unlike Alzheimer’s, there aren't 10 specific warning signs you should watch out for. Nevertheless, dementia describes a group of symptoms that impacts your memory severe enough to interfere with your daily life.
+            <section id="signs-symptoms" className="scroll-mt-24 mx-auto flex flex-col max-w-6xl items-center justify-center p-4 sm:p-8 mt-4">
+                <div className="p-4 flex flex-col mb-4">
+                    <h1 className="text-3xl sm:text-5xl font-semibold text-slate-900 mb-4 text-center">What are the signs and symptoms of dementia?</h1>
+                    <p className="text-lg sm:text-2xl text-center" style={{ color: "#5B6459" }}>Remember that dementia is a general term and not a specific disease like Alzheimer's. Unlike Alzheimer's, there aren't 10 specific warning signs you should watch out for. Nevertheless, dementia describes a group of symptoms that impact your memory, severe enough to interfere with your daily life.
                     </p>
                 </div>
-                <div className="grid grid-cols-3 gap-6 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                   {symptoms.map((item, index) => (
-                    <div key={index} className="w-full rounded-2xl p-6" style={{ border: "2px solid #E4DCC8", background: "#EFEEE6" }}>
+                    <div key={index} className="w-full rounded-2xl p-6" style={{ border: "2px solid #E4DCC8", background: "#FFFFFF" }}>
                       <div className="flex flex-col w-full items-center">
-                        <span className="text-2xl font-semibold">{item.title}</span>
-                        <p className="pt-4 text-center text-slate-600">{item.description}</p>
+                        <span className="text-lg sm:text-2xl font-semibold text-center" style={{ color: "#2F6F62" }}>{item.title}</span>
+                        <p className="pt-4 text-center text-sm sm:text-base" style={{ color: "#5B6459" }}>{item.description}</p>
                       </div>
                     </div>
-                  ))}
+                  ))})
                 </div>
             </section>
 
-            <section id="wtd" className="scroll-mt-24 mx-auto flex w-full flex-col items-center justify-center p-8 mt-4" style={{ background: "#EFEEE6" }}>
+            <section id="what-to-do" className="scroll-mt-24 mx-auto flex w-full flex-col items-center justify-center p-4 sm:p-8 mt-4" style={{ background: "#EFEEE6" }}>
                 <div className="p-4 flex flex-col items-center mb-4 max-w-4xl mb-4">
                     <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl mb-4">What do I do if I have been diagnosed with Dementia?</h1>
                     <p className="text-2xl text-slate-600"> A dementia diagnosis doesn’t mean that you can’t live life to the fullest. To do that, it’s important that you find a healthy way to deal with your emotions and face your diagnosis. It’s important to not isolate yourself, but include yourself in social activities. The following tips may be helpful for you if you have been diagnosed with dementia or Alzheimer’s :
@@ -223,22 +221,22 @@ export default function DementiaPage({onNavigate}){
             </section>
 
             <section className="px-6 py-8">
-              <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-3xl border p-10 sm:flex-row sm:items-center" style={{ borderColor: "#E4DCC8", background: "#F3E7D0" }}>
+              <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-3xl border p-6 sm:p-10 sm:flex-row sm:items-center" style={{ borderColor: "#E4DCC8", background: "#F3E7D0" }}>
                 <div>
-                  <h3 className="text-2xl font-semibold">Stay connected..</h3>
+                  <h3 className="text-2xl font-semibold" style={{ color: "#20261F" }}>Stay connected.</h3>
                   <p className="mt-2" style={{ color: "#5B6459" }}>Create an account to set up a patient profile and invite your family circle.</p>
                 </div>
-                <button onClick={() => navigate("/logsign")} className="shrink-0 rounded-full bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">Log In / Sign Up </button>
+                <button onClick={() => navigate("/logsign")} className="shrink-0 rounded-full px-6 py-3 text-sm font-medium text-white transition hover:opacity-90" style={{ background: "#2F6F62" }}>Log In / Sign Up </button>
               </div>
             </section>
 
             <footer className="border-t border-slate-200 px-6 py-8">
               <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 text-sm text-slate-500 sm:flex-row">
-                <span className="text-slate-700"> CODE-1</span>
-                <div className="flex flex-col items-end">
+                <span className="text-slate-700"> Maitri</span>
+                <div className="flex flex-col items-center sm:items-end">
                   <span>Smart India Hackathon 2026 · Problem Statement - 26003</span>
                   <span>· Bennett University 2025-29</span>
-                  <span>· Team Code-1</span>
+                  <span>· Team Maitri</span>
                 </div>
               </div>
             </footer>

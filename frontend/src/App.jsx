@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import LandingPage from "./components/LandingPage";
 import LogSignPage from "./components/LogSignPage";
@@ -18,14 +18,26 @@ import Profile from "./components/patient/Profile";
 import PatternGame from "./components/games/pattern";
 
 export default function App() {
-  const [path, setPath] = useState(window.location.pathname);
+  const [path, setPath] = useState(window.location.pathname + window.location.search);
   const isAuthenticated = Boolean(window.localStorage.getItem("access_token"));
   const userRole = window.localStorage.getItem("user_role");
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setPath(window.location.pathname + window.location.search);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const navigate = (nextPath) => {
     window.history.pushState({}, "", nextPath);
     setPath(nextPath);
   };
+
+  // Extract pathname for route matching (ignore query params)
+  const pathname = path.split("?")[0];
 
   const logout = () => {
     window.localStorage.removeItem("access_token");
@@ -53,7 +65,7 @@ export default function App() {
     "/story",
   ];
 
-  if (path === "/logsign" && isAuthenticated) {
+  if (pathname === "/logsign" && isAuthenticated) {
     if (userRole === "caretaker") {
       return <CaretakerPage onNavigate={navigate} onLogout={logout} />;
     }
@@ -63,77 +75,77 @@ export default function App() {
     }
   }
 
-  if (protectedCaretakerRoutes.includes(path) || protectedPatientRoutes.includes(path)) {
+  if (protectedCaretakerRoutes.includes(pathname) || protectedPatientRoutes.includes(pathname)) {
     if (!isAuthenticated) {
       return <LogSignPage onNavigate={navigate} />;
     }
 
-    if (protectedCaretakerRoutes.includes(path) && userRole !== "caretaker") {
+    if (protectedCaretakerRoutes.includes(pathname) && userRole !== "caretaker") {
       return <LogSignPage onNavigate={navigate} />;
     }
 
-    if (protectedPatientRoutes.includes(path) && userRole !== "patient") {
+    if (protectedPatientRoutes.includes(pathname) && userRole !== "patient") {
       return <LogSignPage onNavigate={navigate} />;
     }
   }
 
-  if (path === "/homepage") {
+  if (pathname === "/homepage") {
     return <HomePage onNavigate={navigate} onLogout={logout} />;
   }
 
-  if (path === "/caretaker") {
+  if (pathname === "/caretaker") {
     return <CaretakerPage onNavigate={navigate} onLogout={logout} />;
   }
 
-  if (path === "/caretaker/report") {
+  if (pathname === "/caretaker/report") {
     return <ElderCareReport onNavigate={navigate} onLogout={logout} />;
   }
 
-  if (path === "/caretaker/reminders") {
+  if (pathname === "/caretaker/reminders") {
     return <ReminderPage onNavigate={navigate} onLogout={logout} />;
   }
 
-  if (path === "/caretaker/help") {
+  if (pathname === "/caretaker/help") {
     return <HelpBotPage onNavigate={navigate} onLogout={logout} />;
   }
 
-  if (path === "/caretaker/profile") {
+  if (pathname === "/caretaker/profile") {
     return <ProfilePage onNavigate={navigate} onLogout={logout} />;
   }
 
-  if (path === "/caretaker/settings") {
+  if (pathname === "/caretaker/settings") {
     return <SettingsPage onNavigate={navigate} onLogout={logout} />;
   }
 
-  if (path === "/logsign") {
+  if (pathname === "/logsign") {
     return <LogSignPage onNavigate={navigate} />;
   }
 
-  if (path === "/DementiaPage") {
+  if (pathname === "/DementiaPage") {
     return <DementiaPage onNavigate={navigate} />;
   }
 
-  if (path === "/game") {
+  if (pathname === "/game") {
     return <GamePage onNavigate={navigate} />;
   }
 
-  if (path === "/pattern-game") {
+  if (pathname === "/pattern-game") {
     return <PatternGame onNavigate={navigate} />;
   }
 
-  if (path === "/elder-ai") {
+  if (pathname === "/elder-ai") {
     return <ElderAi onNavigate={navigate} />;
   }
 
-  if (path === "/reminder") {
+  if (pathname === "/reminder") {
     return <Reminder onNavigate={navigate} />;
   }
 
-  if (path === "/profile") {
+  if (pathname === "/profile") {
     return <Profile onNavigate={navigate} />;
   }
 
-  if (path === "/story") {
+  if (pathname === "/story") {
     return <Story onNavigate={navigate} />;
   }
 

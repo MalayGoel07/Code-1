@@ -1,8 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../api";
 
 export default function LogSignPage({ onNavigate }) {
   const [mode, setMode] = useState("login");
+
+  useEffect(() => {
+    // Read URL query parameter to determine initial mode
+    const params = new URLSearchParams(window.location.search);
+    const urlMode = params.get("mode");
+    if (urlMode === "signup") {
+      setMode("signup");
+    }
+  }, []);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,9 +85,9 @@ export default function LogSignPage({ onNavigate }) {
   return (
     <div className="theme-page h-screen overflow-hidden flex flex-col" style={{ background: "#FBF8F2", color: "#20261F", fontFamily: "'Atkinson Hyperlegible', system-ui, sans-serif" }}>
       <nav className="flex items-center justify-between px-6 py-4 border-b backdrop-blur-md z-50" style={{ borderColor: "#E4DCC8", background: "rgba(255,255,255,0.9)" }}>
-        <div className="text-xl font-semibold tracking-tight">
-            CODE<span style={{ color: "#2F6F62" }}>-1</span>
-          </div>
+        <button onClick={() => navigate("/")} className="text-xl font-semibold tracking-tight text-slate-900 bg-transparent border-none cursor-pointer hover:opacity-70 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400">
+            Maitri
+          </button>
         <div className="flex items-center gap-8">
             <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-base tracking-wide rounded-full px-4 py-2 transition-colors" style={{ color: "#5B6459", border: "2px solid #C9C2B2" }}>← Back</button>
         </div>
