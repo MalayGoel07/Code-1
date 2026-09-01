@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {UserRound,Pencil,CalendarDays,Languages,Heart,Gamepad2,BookOpen,Bell,ShieldCheck,UsersRound,Check,} from "lucide-react";
 
 import { api } from "../../api";
 import PatientNavigation from "./PatientNavigation";
 
 export default function Profile({ onNavigate }) {
-  const navigate =
-    onNavigate ??
-    ((nextPath) => {
-      window.location.href = nextPath;
-    });
+  const navigate = useMemo(
+    () =>
+      onNavigate ??
+      ((nextPath) => {
+        window.location.href = nextPath;
+      }),
+    [onNavigate]
+  );
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);

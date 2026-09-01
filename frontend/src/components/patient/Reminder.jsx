@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pill, CalendarDays, Activity, Check, Clock, Bell, PartyPopper,} from "lucide-react";
 
 import { api } from "../../api";
@@ -19,11 +19,14 @@ const REMINDER_COLORS = {
 };
 
 export default function Reminder({ onNavigate }) {
-  const navigate =
-    onNavigate ??
-    ((nextPath) => {
-      window.location.href = nextPath;
-    });
+  const navigate = useMemo(
+    () =>
+      onNavigate ??
+      ((nextPath) => {
+        window.location.href = nextPath;
+      }),
+    [onNavigate]
+  );
 
   const [reminders, setReminders] = useState([]);
   const [completedTasks, setCompletedTasks] = useState([]);
@@ -96,6 +99,7 @@ export default function Reminder({ onNavigate }) {
       ) : null}
 
       <main className="mx-auto mt-10 max-w-5xl px-6">
+        {error ? <p className="mx-auto mb-4 max-w-3xl rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
         <div className="text-center">
           <h1 className="text-4xl font-bold sm:text-5xl">Reminders</h1>
           <p className="mx-auto mt-3 max-w-2xl text-xl" style={{ color: "#5B6459" }}> Here are the things you need to remember today.</p>

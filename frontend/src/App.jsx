@@ -16,17 +16,18 @@ import ElderAi from "./components/patient/ElderAi";
 import Story from "./components/patient/Story";
 import Profile from "./components/patient/Profile";
 import PatternGame from "./components/games/pattern";
+import { useAuth } from "./hooks/useAuth";
+import { getUserRole, isCaretakerRole, isPatientRole } from "./lib/roles";
 
 export default function App() {
+  const { user, loading, isAuthenticated, logout } = useAuth();
   const [path, setPath] = useState(window.location.pathname + window.location.search);
-  const isAuthenticated = Boolean(window.localStorage.getItem("access_token"));
-  const userRole = window.localStorage.getItem("user_role");
 
-  // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
       setPath(window.location.pathname + window.location.search);
     };
+
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
@@ -36,14 +37,17 @@ export default function App() {
     setPath(nextPath);
   };
 
-  // Extract pathname for route matching (ignore query params)
   const pathname = path.split("?")[0];
+  const userRole = getUserRole(user);
 
-  const logout = () => {
-    window.localStorage.removeItem("access_token");
-    window.localStorage.removeItem("token_type");
-    window.localStorage.removeItem("user_role");
-    navigate("/logsign");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/logsign");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      navigate("/logsign");
+    }
   };
 
   const protectedCaretakerRoutes = [
@@ -65,13 +69,21 @@ export default function App() {
     "/story",
   ];
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" style={{ background: "#FBF8F2", color: "#20261F" }}>
+        <p className="text-lg font-medium">Loading your session...</p>
+      </div>
+    );
+  }
+
   if (pathname === "/logsign" && isAuthenticated) {
-    if (userRole === "caretaker") {
-      return <CaretakerPage onNavigate={navigate} onLogout={logout} />;
+    if (isCaretakerRole(userRole)) {
+      return <CaretakerPage onNavigate={navigate} onLogout={handleLogout} />;
     }
 
-    if (userRole === "patient") {
-      return <HomePage onNavigate={navigate} onLogout={logout} />;
+    if (isPatientRole(userRole)) {
+      return <HomePage onNavigate={navigate} onLogout={handleLogout} />;
     }
   }
 
@@ -80,41 +92,41 @@ export default function App() {
       return <LogSignPage onNavigate={navigate} />;
     }
 
-    if (protectedCaretakerRoutes.includes(pathname) && userRole !== "caretaker") {
+    if (protectedCaretakerRoutes.includes(pathname) && !isCaretakerRole(userRole)) {
       return <LogSignPage onNavigate={navigate} />;
     }
 
-    if (protectedPatientRoutes.includes(pathname) && userRole !== "patient") {
+    if (protectedPatientRoutes.includes(pathname) && !isPatientRole(userRole)) {
       return <LogSignPage onNavigate={navigate} />;
     }
   }
 
   if (pathname === "/homepage") {
-    return <HomePage onNavigate={navigate} onLogout={logout} />;
+    return <HomePage onNavigate={navigate} onLogout={handleLogout} />;
   }
 
   if (pathname === "/caretaker") {
-    return <CaretakerPage onNavigate={navigate} onLogout={logout} />;
+    return <CaretakerPage onNavigate={navigate} onLogout={handleLogout} />;
   }
 
   if (pathname === "/caretaker/report") {
-    return <ElderCareReport onNavigate={navigate} onLogout={logout} />;
+    return <ElderCareReport onNavigate={navigate} onLogout={handleLogout} />;
   }
 
   if (pathname === "/caretaker/reminders") {
-    return <ReminderPage onNavigate={navigate} onLogout={logout} />;
+    return <ReminderPage onNavigate={navigate} onLogout={handleLogout} />;
   }
 
   if (pathname === "/caretaker/help") {
-    return <HelpBotPage onNavigate={navigate} onLogout={logout} />;
+    return <HelpBotPage onNavigate={navigate} onLogout={handleLogout} />;
   }
 
   if (pathname === "/caretaker/profile") {
-    return <ProfilePage onNavigate={navigate} onLogout={logout} />;
+    return <ProfilePage onNavigate={navigate} onLogout={handleLogout} />;
   }
 
   if (pathname === "/caretaker/settings") {
-    return <SettingsPage onNavigate={navigate} onLogout={logout} />;
+    return <SettingsPage onNavigate={navigate} onLogout={handleLogout} />;
   }
 
   if (pathname === "/logsign") {
