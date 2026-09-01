@@ -12,7 +12,7 @@ export default function AIHelpbot({ onNavigate }) {
     {
       id: 1,
       sender: "bot",
-      text: "Hello! I'm your CODE-1 care assistant. I can help you with general caregiving guidance, daily routines, and using the platform.",
+      text: "Hello! I'm your Maitri care assistant. I can help you with general caregiving guidance, daily routines, and using the platform.",
     },
   ]);
 
@@ -49,14 +49,14 @@ export default function AIHelpbot({ onNavigate }) {
       message.includes("memory") ||
       message.includes("forget")
     ) {
-      return "You can support memory with familiar photos, names, simple conversations, music, and consistent daily routines. CODE-1's cognitive activities can also be used as a way to encourage engagement.";
+      return "You can support memory with familiar photos, names, simple conversations, music, and consistent daily routines. Maitri's cognitive activities can also be used as a way to encourage engagement.";
     }
 
     if (
       message.includes("help") ||
       message.includes("support")
     ) {
-      return "I'm here to help with general caregiving guidance, daily routines, reminders, and navigating CODE-1. You can ask me about a specific situation as well.";
+      return "I'm here to help with general caregiving guidance, daily routines, reminders, and navigating Maitri. You can ask me about a specific situation as well.";
     }
 
     return "I understand. For general caregiving, try to keep communication calm, simple, and reassuring. You can also ask me about routines, reminders, memory support, or a specific caregiving situation.";
@@ -110,7 +110,7 @@ export default function AIHelpbot({ onNavigate }) {
 
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[#756f67]">
             Get general guidance and support for daily caregiving, routines,
-            memory care, and using CODE-1.
+            memory care, and using Maitri.
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export default function AIHelpbot({ onNavigate }) {
 
               <div>
                 <p className="font-semibold text-[#3f3a34]">
-                  CODE-1 Care Assistant
+                  Maitri Care Assistant
                 </p>
 
                 <p className="text-sm text-[#6f8f7a]">

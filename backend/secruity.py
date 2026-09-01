@@ -13,7 +13,7 @@ from db import users_collection
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me-please-use-env")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")

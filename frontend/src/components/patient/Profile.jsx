@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {UserRound,Pencil,CalendarDays,Languages,Heart,Gamepad2,BookOpen,Bell,ShieldCheck,UsersRound,Check,} from "lucide-react";
+import {UserRound,Pencil,CalendarDays,Languages,Heart,Gamepad2,BookOpen,Bell,ShieldCheck,UsersRound,Check,X,} from "lucide-react";
 
 import { api } from "../../api";
 import PatientNavigation from "./PatientNavigation";
@@ -19,6 +19,8 @@ export default function Profile({ onNavigate }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [pendingRequest, setPendingRequest] = useState(null);
+  const [responding, setResponding] = useState(false);
   const [profile, setProfile] = useState({
     name: "",
     age: "",
@@ -71,6 +73,27 @@ export default function Profile({ onNavigate }) {
     };
 
     fetchProfile();
+  }, [navigate]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    api
+      .get("/patient/link-request", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((data) => {
+        if (data?.pending_caregiver_email) {
+          setPendingRequest({
+            caregiver_email: data.pending_caregiver_email,
+            caregiver_name: data.pending_caregiver_name || "",
+          });
+        } else {
+          setPendingRequest(null);
+        }
+      })
+      .catch(() => setPendingRequest(null));
   }, [navigate]);
 
   const handleProfileChange = (field, value) => {
@@ -132,6 +155,41 @@ export default function Profile({ onNavigate }) {
     }
   };
 
+  const respondToLinkRequest = async (accept) => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      navigate("/logsign");
+      return;
+    }
+
+    setResponding(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const data = await api.post(
+        "/patient/link-request/respond",
+        { accept },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (accept && data?.caregiver_email) {
+        setProfile((currentProfile) => ({
+          ...currentProfile,
+          caregiver_email: data.caregiver_email,
+        }));
+        setSuccessMessage("Caregiver approved.");
+      } else {
+        setSuccessMessage("Caregiver request declined.");
+      }
+      setPendingRequest(null);
+    } catch (err) {
+      setError(err.message || "We couldn't process that request.");
+    } finally {
+      setResponding(false);
+    }
+  };
+
   return (
     <div  className="theme-page min-h-screen pb-16"  style={{ background: "#FBF8F2", color: "#20261F", fontFamily: "Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif",}}>
       <PatientNavigation onNavigate={navigate} activePage="profile"/>
@@ -165,6 +223,59 @@ export default function Profile({ onNavigate }) {
           {!error && successMessage && <p className="mt-4 text-center text-sm text-green-700">{successMessage}</p>}
           {loading && !error && <p className="mt-4 text-center text-sm text-[#5B6459]">Loading your profile...</p>}
         </section>
+
+        {pendingRequest && (
+          <section
+            className="mx-auto mt-8 max-w-3xl rounded-3xl p-6 sm:p-8"
+            style={{ background: "#F3E7D0", border: "2px solid #C97A2B" }}
+            aria-label="Caregiver request"
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
+                style={{ background: "#FFFFFF", color: "#C97A2B" }}
+              >
+                <UsersRound className="h-7 w-7" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-bold" style={{ color: "#8A4E12" }}>
+                  Caregiver Request
+                </p>
+                <p className="mt-1 text-lg font-semibold" style={{ color: "#20261F" }}>
+                  {pendingRequest.caregiver_name || pendingRequest.caregiver_email}{" "}
+                  wants to be your caregiver.
+                </p>
+                <p className="mt-1 text-base" style={{ color: "#5B6459" }}>
+                  {pendingRequest.caregiver_email} will be able to add reminders and
+                  medicines for you once you approve.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => respondToLinkRequest(true)}
+                disabled={responding}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-3 text-lg font-bold active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+                style={{ background: "#2F6F62", color: "#FFFFFF", border: "2px solid #2F6F62" }}
+              >
+                <Check className="h-5 w-5" aria-hidden="true" />
+                {responding ? "Approving..." : "Approve"}
+              </button>
+              <button
+                type="button"
+                onClick={() => respondToLinkRequest(false)}
+                disabled={responding}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-3 text-lg font-bold active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+                style={{ background: "#FFFFFF", color: "#B23A3A", border: "2px solid #B23A3A" }}
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+                Decline
+              </button>
+            </div>
+          </section>
+        )}
 
         <section className="mx-auto mt-8 max-w-3xl">
           <div className="mb-5 flex items-center justify-between gap-4">

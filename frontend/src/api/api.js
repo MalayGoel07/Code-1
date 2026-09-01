@@ -1,5 +1,13 @@
 export const API_BASE_URL = "http://localhost:8000";
 
+const getStoredAuthToken = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem("access_token");
+};
+
 const parseResponse = async (response) => {
   const contentType = response.headers.get("content-type") || "";
   if (contentType.includes("application/json")) {
@@ -8,10 +16,33 @@ const parseResponse = async (response) => {
   return response.text();
 };
 
+const clearStaleSession = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const protectedPaths = ["/homepage", "/game", "/pattern-game", "/elder-ai", "/reminder", "/medications", "/profile", "/story", "/caretaker", "/caretaker/report", "/caretaker/reminders", "/caretaker/help", "/caretaker/profile", "/caretaker/settings"];
+
+  window.localStorage.removeItem("access_token");
+  window.localStorage.removeItem("user_role");
+  window.localStorage.removeItem("user_email");
+  window.localStorage.removeItem("user_full_name");
+  window.localStorage.removeItem("full_name");
+  window.localStorage.removeItem("current_mood");
+
+  if (protectedPaths.includes(window.location.pathname)) {
+    window.location.href = "/logsign";
+  }
+};
+
 const handleResponse = async (response) => {
   const data = await parseResponse(response);
 
   if (!response.ok) {
+    if (response.status === 401) {
+      clearStaleSession();
+    }
+
     const error =
       typeof data === "object" && data !== null
         ? data.detail || data.message || "Request failed"
@@ -24,11 +55,18 @@ const handleResponse = async (response) => {
 
 export const api = {
   request: async (path, options = {}) => {
+    const token = getStoredAuthToken();
+    const headers = {
+      ...(options.headers || {}),
+    };
+
+    if (token && !headers.Authorization) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
-      headers: {
-        ...(options.headers || {}),
-      },
+      headers,
     });
 
     return handleResponse(response);
@@ -62,6 +100,13 @@ export const api = {
         ...(options.headers || {}),
       },
       body: typeof body === "string" ? body : JSON.stringify(body),
+    });
+  },
+
+  delete: async (path, options = {}) => {
+    return api.request(path, {
+      ...options,
+      method: "DELETE",
     });
   },
 };

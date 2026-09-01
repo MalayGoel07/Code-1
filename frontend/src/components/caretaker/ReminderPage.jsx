@@ -1,24 +1,59 @@
 import { useState } from "react";
 import { ArrowLeft, Bell, Plus, Clock3, Pill, CheckCircle2, Circle, Trash2, CalendarDays, X,} from "lucide-react";
 import { api } from "../../api";
+import MedicationManager from "./MedicationManager";
+import PatientLinkManager from "./PatientLinkManager";
 
 export default function ReminderPage({ onNavigate }) {
   const [reminders, setReminders] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [newReminder, setNewReminder] = useState({ patient_email: "", title: "", description: "", time: "", type: "Medicine",});
+  const [newReminder, setNewReminder] = useState({
+    patient_email: "",
+    title: "",
+    description: "",
+    time: "",
+    time2: "",
+    type: "Medicine",
+    frequency: "Daily",
+    day: "Monday",
+    dosage: "",
+    duration: "",
+  });
   const addReminder = async (event) => {
     event.preventDefault();
-    if (!newReminder.patient_email || !newReminder.title || !newReminder.time) {
-      setError("Please fill in patient email, title, and time.");
+    if (!newReminder.patient_email || !newReminder.title) {
+      setError("Please fill in patient email and a title.");
       return;
     }
+    if (newReminder.frequency === "Twice a day" && (!newReminder.time || !newReminder.time2)) {
+      setError("Please enter both times for a twice-a-day reminder.");
+      return;
+    }
+    if (newReminder.frequency !== "Twice a day" && !newReminder.time) {
+      setError("Please enter a time.");
+      return;
+    }
+    if (newReminder.type === "Medicine" && !newReminder.dosage) {
+      setError("Please enter the dosage for this medicine.");
+      return;
+    }
+    if (newReminder.type === "Activity" && !newReminder.duration) {
+      setError("Please enter how long the exercise should last.");
+      return;
+    }
+
     const token = localStorage.getItem("access_token");
     if (!token) {
       setError("Please log in to add a reminder.");
       return;
     }
+
+    const times =
+      newReminder.frequency === "Twice a day"
+        ? [newReminder.time, newReminder.time2]
+        : [newReminder.time];
 
     try {
       setSaving(true);
@@ -30,25 +65,49 @@ export default function ReminderPage({ onNavigate }) {
           patient_email: newReminder.patient_email,
           title: newReminder.title,
           description: newReminder.description || "No description added",
-          time: newReminder.time,
+          time: times[0],
+          times,
           type: newReminder.type,
+          frequency:
+            newReminder.frequency === "Twice a day"
+              ? "Twice daily"
+              : newReminder.frequency,
+          day: newReminder.frequency === "Weekly" ? newReminder.day : "",
+          dosage: newReminder.type === "Medicine" ? newReminder.dosage : "",
+          duration: newReminder.type === "Activity" ? newReminder.duration : "",
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const reminder = {
-        id: data.reminder?.id || Date.now(),
-        title: newReminder.title,
-        description: newReminder.description || "No description added",
-        time: newReminder.time,
-        type: newReminder.type,
+      const created = Array.isArray(data?.reminders) ? data.reminders : [];
+      const items = created.map((item) => ({
+        id: item.id || Date.now() + Math.random(),
+        title: item.title,
+        description: item.description,
+        time: item.time,
+        type: item.type,
+        frequency: item.frequency,
+        day: item.day,
+        dosage: item.dosage,
+        duration: item.duration,
         completed: false,
-      };
+      }));
 
-      setReminders((currentReminders) => [...currentReminders, reminder]);
-      setNewReminder({ patient_email: "", title: "", description: "", time: "", type: "Medicine",});
+      setReminders((currentReminders) => [...currentReminders, ...items]);
+      setNewReminder({
+        patient_email: "",
+        title: "",
+        description: "",
+        time: "",
+        time2: "",
+        type: "Medicine",
+        frequency: "Daily",
+        day: "Monday",
+        dosage: "",
+        duration: "",
+      });
       setShowForm(false);
     } catch (err) {
       setError(err.message || "Something went wrong.");
@@ -121,35 +180,83 @@ export default function ReminderPage({ onNavigate }) {
                 <label className="text-sm font-medium text-[#554f48]">Patient Email</label>
                 <input type="email" value={newReminder.patient_email} onChange={(event) => setNewReminder({ ...newReminder, patient_email: event.target.value }) } placeholder="elder@example.com" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
               </div>
-              <div>
-                <label className="text-sm font-medium text-[#554f48]">Reminder Title</label>
-                <input type="text" value={newReminder.title} onChange={(event) => setNewReminder({ ...newReminder, title: event.target.value, }) } placeholder="Example: Take morning medicine" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-[#554f48]">Time</label>
-                <input type="time" value={newReminder.time} onChange={(event) => setNewReminder({ ...newReminder, time: event.target.value})} className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]" />
-              </div>
 
               <div>
-                <label className="text-sm font-medium text-[#554f48]">Type</label>
-
-                <select value={newReminder.type} onChange={(event) => setNewReminder({ ...newReminder, type: event.target.value, }) } className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]" >
-                  <option>Medicine</option>
-                  <option>Health</option>
-                  <option>Activity</option>
-                  <option>Routine</option>
+                <label className="text-sm font-medium text-[#554f48]">What is it?</label>
+                <select value={newReminder.type} onChange={(event) => setNewReminder({ ...newReminder, type: event.target.value }) } className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]">
+                  <option value="Medicine">Medicine</option>
+                  <option value="Activity">Activity (Exercise)</option>
+                  <option value="Health">Health</option>
+                  <option value="Routine">Routine</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-[#554f48]"> Description</label>
-                <input type="text" value={newReminder.description} onChange={(event) => setNewReminder({ ...newReminder, description: event.target.value, }) } placeholder="Optional description" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
+                <label className="text-sm font-medium text-[#554f48]">How often?</label>
+                <select value={newReminder.frequency} onChange={(event) => setNewReminder({ ...newReminder, frequency: event.target.value }) } className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]">
+                  <option value="Daily">Daily</option>
+                  <option value="Twice a day">Twice a day</option>
+                  <option value="Weekly">Weekly</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2 grid gap-5 sm:grid-cols-2">
+                {newReminder.frequency === "Weekly" && (
+                  <div>
+                    <label className="text-sm font-medium text-[#554f48]">Which day?</label>
+                    <select value={newReminder.day} onChange={(event) => setNewReminder({ ...newReminder, day: event.target.value }) } className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]">
+                      {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map((weekday) => (
+                        <option key={weekday} value={weekday}>{weekday}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-medium text-[#554f48]">Time</label>
+                  <input type="time" value={newReminder.time} onChange={(event) => setNewReminder({ ...newReminder, time: event.target.value })} className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
+                </div>
+                {newReminder.frequency === "Twice a day" && (
+                  <div>
+                    <label className="text-sm font-medium text-[#554f48]">Second Time</label>
+                    <input type="time" value={newReminder.time2} onChange={(event) => setNewReminder({ ...newReminder, time2: event.target.value })} className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-[#554f48]">
+                  {newReminder.type === "Medicine" ? "Which medicine?" : newReminder.type === "Activity" ? "Which exercise?" : "Reminder title"}
+                </label>
+                <input type="text" value={newReminder.title} onChange={(event) => setNewReminder({ ...newReminder, title: event.target.value }) } placeholder={newReminder.type === "Medicine" ? "e.g. Aspirin" : newReminder.type === "Activity" ? "e.g. Morning walk" : "e.g. Drink water"} className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
+              </div>
+
+              {newReminder.type === "Medicine" && (
+                <div>
+                  <label className="text-sm font-medium text-[#554f48]">Dosage</label>
+                  <input type="text" value={newReminder.dosage} onChange={(event) => setNewReminder({ ...newReminder, dosage: event.target.value }) } placeholder="e.g. 1 tablet / 500 mg" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
+                </div>
+              )}
+
+              {newReminder.type === "Activity" && (
+                <div>
+                  <label className="text-sm font-medium text-[#554f48]">For how long?</label>
+                  <input type="text" value={newReminder.duration} onChange={(event) => setNewReminder({ ...newReminder, duration: event.target.value }) } placeholder="e.g. 20 minutes" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
+                </div>
+              )}
+
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-[#554f48]">Notes</label>
+                <input type="text" value={newReminder.description} onChange={(event) => setNewReminder({ ...newReminder, description: event.target.value }) } placeholder="Optional notes for your elder" className="mt-2 w-full rounded-xl border border-[#ddd5c8] bg-white px-4 py-3 text-[#3f3b36] outline-none transition placeholder:text-[#aaa196] focus:border-[#7ba287] focus:ring-2 focus:ring-[#dce9df]"/>
               </div>
               {error && <p className="sm:col-span-2 text-sm text-red-600">{error}</p>}
               <button type="submit" disabled={saving} className="sm:col-span-2 rounded-xl bg-[#5f8f70] px-5 py-3 font-medium text-white transition hover:bg-[#4d7a5e] disabled:cursor-not-allowed disabled:opacity-70">{saving ? "Saving..." : "Save Reminder"}</button>
             </form>
           </div>
         )}
+
+        <PatientLinkManager />
+
+        <MedicationManager />
 
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
           <div className="rounded-2xl border border-[#e1dbd0] bg-[#faf9f6] p-6 shadow-sm">
@@ -208,6 +315,18 @@ export default function ReminderPage({ onNavigate }) {
                   <div>
                     <p className={`font-semibold ${ reminder.completed ? "text-[#9a948a] line-through" : "text-[#3f3b36]"}`}>{reminder.title}</p>
                     <p className="mt-1 text-sm text-[#81796f]">{reminder.description} </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium">
+                      <span className="rounded-full bg-[#eef3ee] px-2.5 py-1 text-[#5f8f70]">
+                        {reminder.frequency || "Daily"}
+                        {reminder.frequency === "Weekly" && reminder.day ? ` · ${reminder.day}` : ""}
+                      </span>
+                      {reminder.dosage ? (
+                        <span className="rounded-full bg-[#f4efe4] px-2.5 py-1 text-[#a47a50]">{reminder.dosage}</span>
+                      ) : null}
+                      {reminder.duration ? (
+                        <span className="rounded-full bg-[#f4efe4] px-2.5 py-1 text-[#a47a50]">{reminder.duration}</span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 

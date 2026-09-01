@@ -37,6 +37,8 @@ const persistAuthState = (token, role, userData = {}) => {
     window.localStorage.removeItem("user_role");
     window.localStorage.removeItem("user_email");
     window.localStorage.removeItem("user_full_name");
+    window.localStorage.removeItem("full_name");
+    window.localStorage.removeItem("current_mood");
     return;
   }
 
@@ -44,6 +46,7 @@ const persistAuthState = (token, role, userData = {}) => {
   window.localStorage.setItem("user_role", role || "patient");
   window.localStorage.setItem("user_email", userData.email || "");
   window.localStorage.setItem("user_full_name", userData.full_name || "");
+  window.localStorage.setItem("full_name", userData.full_name || "");
 };
 
 export function AuthProvider({ children }) {

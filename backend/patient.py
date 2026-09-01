@@ -49,6 +49,17 @@ class MoodSelection(BaseModel):
     note: str | None = None
 
 
+def _sanitize_reminders(reminders):
+    cleaned = []
+    for reminder in reminders:
+        title = str(reminder.get("title", "")).strip()
+        normalized = title.lower()
+        if normalized.startswith("trial") or normalized.startswith("trail"):
+            continue
+        cleaned.append(reminder)
+    return cleaned
+
+
 @router.get("/me")
 async def get_patient_profile( current_user: Annotated[User, Depends(get_current_active_user)]):
     user = users_collection.find_one({"username": current_user.username})
@@ -168,7 +179,15 @@ async def get_patient_reminders(current_user: Annotated[User, Depends(get_curren
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    reminders = list(user.get("reminders", []))
+    raw_reminders = list(user.get("reminders", []))
+    reminders = _sanitize_reminders(raw_reminders)
+
+    if len(reminders) != len(raw_reminders):
+        users_collection.update_one(
+            {"username": current_user.username},
+            {"$set": {"reminders": reminders}},
+        )
+
     return {
         "reminders": reminders,
         "done_count": user.get("completed_reminders_count", 0),
@@ -212,3 +231,69 @@ async def complete_patient_reminder(data: ReminderCompletion, current_user: Anno
         {"$set": {"reminders": remaining, "completed_reminders_count": done_count}},
     )
     return {"message": "Reminder completed", "done_count": done_count, "reminders": remaining}
+
+
+@router.get("/medications")
+async def get_patient_medications(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    user = users_collection.find_one({"username": current_user.username})
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "medications": user.get("medications", [])
+    }
+
+
+class CaretakerLinkResponse(BaseModel):
+    accept: bool
+
+
+@router.get("/link-request")
+async def get_link_request(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    user = users_collection.find_one({"username": current_user.username})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    pending_email = (user.get("pending_caregiver_email") or "").strip() or None
+    return {
+        "pending_caregiver_email": pending_email,
+        "pending_caregiver_name": (
+            (user.get("pending_caregiver_name") or "").strip() or None
+        ),
+    }
+
+
+@router.post("/link-request/respond")
+async def respond_link_request(
+    data: CaretakerLinkResponse,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    user = users_collection.find_one({"username": current_user.username})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    pending_email = (user.get("pending_caregiver_email") or "").strip()
+    if not pending_email:
+        raise HTTPException(status_code=400, detail="No pending caregiver request")
+
+    if data.accept:
+        users_collection.update_one(
+            {"username": current_user.username},
+            {"$set": {
+                "caregiver_email": pending_email,
+                "pending_caregiver_email": "",
+                "pending_caregiver_name": "",
+            }},
+        )
+        return {"message": "Caregiver approved", "caregiver_email": pending_email}
+
+    users_collection.update_one(
+        {"username": current_user.username},
+        {"$set": {"pending_caregiver_email": "", "pending_caregiver_name": ""}},
+    )
+    return {"message": "Caregiver request declined"}

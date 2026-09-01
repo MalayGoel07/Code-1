@@ -140,7 +140,7 @@ export default function ProfilePage({ onNavigate }) {
             <div>
               <h3 className="font-semibold text-[#2f3b32]">Your information matters</h3>
               <p className="mt-2 text-sm leading-relaxed text-[#6b736b]">
-                Keeping your caretaker profile up to date helps CODE-1 provide
+                Keeping your caretaker profile up to date helps Maitri provide
                 better coordination between you, your family, and your elder's
                 care information.
               </p>

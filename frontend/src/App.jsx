@@ -3,15 +3,11 @@ import { useState, useEffect, useMemo } from "react";
 import LandingPage from "./components/LandingPage";
 import LogSignPage from "./components/LogSignPage";
 import HomePage from "./components/patient/HomePage";
-import CaretakerPage from "./components/caretaker/CaretakerPage";
-import ElderCareReport from "./components/caretaker/ElderCareReport";
-import ReminderPage from "./components/caretaker/ReminderPage";
-import HelpBotPage from "./components/caretaker/HelpBotPage";
-import ProfilePage from "./components/caretaker/ProfilePage";
-import SettingsPage from "./components/caretaker/SettingsPage";
+import CaretakerLayout from "./components/caretaker/CaretakerLayout";
 import DementiaPage from "./components/DementiaPage";
 import GamePage from "./components/patient/GamePage";
 import Reminder from "./components/patient/Reminder";
+import Medications from "./components/patient/Medications";
 import ElderAi from "./components/patient/ElderAi";
 import Story from "./components/patient/Story";
 import Profile from "./components/patient/Profile";
@@ -60,6 +56,7 @@ export default function App() {
       "/pattern-game",
       "/elder-ai",
       "/reminder",
+      "/medications",
       "/profile",
       "/story",
     ],
@@ -118,28 +115,23 @@ export default function App() {
     return <HomePage onNavigate={navigate} onLogout={handleLogout} />;
   }
 
-  if (pathname === "/caretaker") {
-    return <CaretakerPage onNavigate={navigate} onLogout={handleLogout} />;
-  }
-
-  if (pathname === "/caretaker/report") {
-    return <ElderCareReport onNavigate={navigate} onLogout={handleLogout} />;
-  }
-
-  if (pathname === "/caretaker/reminders") {
-    return <ReminderPage onNavigate={navigate} onLogout={handleLogout} />;
-  }
-
-  if (pathname === "/caretaker/help") {
-    return <HelpBotPage onNavigate={navigate} onLogout={handleLogout} />;
-  }
-
-  if (pathname === "/caretaker/profile") {
-    return <ProfilePage onNavigate={navigate} onLogout={handleLogout} />;
-  }
-
-  if (pathname === "/caretaker/settings") {
-    return <SettingsPage onNavigate={navigate} onLogout={handleLogout} />;
+  if (pathname === "/caretaker" || pathname.startsWith("/caretaker/")) {
+    const caretakerTabs = {
+      "/caretaker": "overview",
+      "/caretaker/report": "report",
+      "/caretaker/reminders": "reminders",
+      "/caretaker/help": "help",
+      "/caretaker/profile": "profile",
+      "/caretaker/settings": "settings",
+    };
+    return (
+      <CaretakerLayout
+        key={pathname}
+        onNavigate={navigate}
+        onLogout={handleLogout}
+        initialTab={caretakerTabs[pathname] || "overview"}
+      />
+    );
   }
 
   if (pathname === "/logsign") {
@@ -164,6 +156,10 @@ export default function App() {
 
   if (pathname === "/reminder") {
     return <Reminder onNavigate={navigate} />;
+  }
+
+  if (pathname === "/medications") {
+    return <Medications onNavigate={navigate} />;
   }
 
   if (pathname === "/profile") {
