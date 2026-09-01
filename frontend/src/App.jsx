@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import LandingPage from "./components/LandingPage";
 import LogSignPage from "./components/LogSignPage";
@@ -33,12 +33,38 @@ export default function App() {
   }, []);
 
   const navigate = (nextPath) => {
-    window.history.pushState({}, "", nextPath);
-    setPath(nextPath);
+    const safePath = nextPath || "/";
+    window.history.pushState({}, "", safePath);
+    setPath(safePath);
   };
 
   const pathname = path.split("?")[0];
   const userRole = getUserRole(user);
+
+  const protectedCaretakerRoutes = useMemo(
+    () => [
+      "/caretaker",
+      "/caretaker/report",
+      "/caretaker/reminders",
+      "/caretaker/help",
+      "/caretaker/profile",
+      "/caretaker/settings",
+    ],
+    []
+  );
+
+  const protectedPatientRoutes = useMemo(
+    () => [
+      "/homepage",
+      "/game",
+      "/pattern-game",
+      "/elder-ai",
+      "/reminder",
+      "/profile",
+      "/story",
+    ],
+    []
+  );
 
   const handleLogout = async () => {
     try {
@@ -50,24 +76,35 @@ export default function App() {
     }
   };
 
-  const protectedCaretakerRoutes = [
-    "/caretaker",
-    "/caretaker/report",
-    "/caretaker/reminders",
-    "/caretaker/help",
-    "/caretaker/profile",
-    "/caretaker/settings",
-  ];
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
 
-  const protectedPatientRoutes = [
-    "/homepage",
-    "/game",
-    "/pattern-game",
-    "/elder-ai",
-    "/reminder",
-    "/profile",
-    "/story",
-  ];
+    const isProtectedPatientRoute = protectedPatientRoutes.includes(pathname);
+    const isProtectedCaretakerRoute = protectedCaretakerRoutes.includes(pathname);
+
+    let nextPath = null;
+
+    if (!isAuthenticated) {
+      if (isProtectedPatientRoute || isProtectedCaretakerRoute) {
+        nextPath = "/logsign";
+      }
+    } else if ((pathname === "/" || pathname === "/logsign") && isPatientRole(userRole)) {
+      nextPath = "/homepage";
+    } else if ((pathname === "/" || pathname === "/logsign") && isCaretakerRole(userRole)) {
+      nextPath = "/caretaker";
+    } else if (isProtectedPatientRoute && !isPatientRole(userRole)) {
+      nextPath = "/logsign";
+    } else if (isProtectedCaretakerRoute && !isCaretakerRole(userRole)) {
+      nextPath = "/logsign";
+    }
+
+    if (nextPath && window.location.pathname !== nextPath) {
+      window.history.replaceState({}, "", nextPath);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
+  }, [loading, isAuthenticated, pathname, userRole, protectedCaretakerRoutes, protectedPatientRoutes]);
 
   if (loading) {
     return (
@@ -75,30 +112,6 @@ export default function App() {
         <p className="text-lg font-medium">Loading your session...</p>
       </div>
     );
-  }
-
-  if (pathname === "/logsign" && isAuthenticated) {
-    if (isCaretakerRole(userRole)) {
-      return <CaretakerPage onNavigate={navigate} onLogout={handleLogout} />;
-    }
-
-    if (isPatientRole(userRole)) {
-      return <HomePage onNavigate={navigate} onLogout={handleLogout} />;
-    }
-  }
-
-  if (protectedCaretakerRoutes.includes(pathname) || protectedPatientRoutes.includes(pathname)) {
-    if (!isAuthenticated) {
-      return <LogSignPage onNavigate={navigate} />;
-    }
-
-    if (protectedCaretakerRoutes.includes(pathname) && !isCaretakerRole(userRole)) {
-      return <LogSignPage onNavigate={navigate} />;
-    }
-
-    if (protectedPatientRoutes.includes(pathname) && !isPatientRole(userRole)) {
-      return <LogSignPage onNavigate={navigate} />;
-    }
   }
 
   if (pathname === "/homepage") {

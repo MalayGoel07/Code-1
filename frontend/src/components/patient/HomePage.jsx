@@ -53,10 +53,25 @@ export default function PatientHome({ onNavigate, onLogout }) {
   const [savingMood, setSavingMood] = useState(false);
   const [reminderDone, setReminderDone] = useState(false);
   const [todayReminder, setTodayReminder] = useState(null);
+  const [userName, setUserName] = useState(
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("user_full_name") || window.localStorage.getItem("full_name") || "there"
+      : "there"
+  );
 
   useEffect(() => {
     const token = window.localStorage.getItem("access_token");
     if (!token) return;
+
+    api
+      .get("/patient/me", { headers: { Authorization: `Bearer ${token}` } })
+      .then((data) => {
+        const nextName = data?.full_name || data?.username || "there";
+        setUserName(nextName);
+        window.localStorage.setItem("user_full_name", nextName);
+        window.localStorage.setItem("full_name", nextName);
+      })
+      .catch(() => {});
 
     api.get("/patient/mood-history", { headers: { Authorization: `Bearer ${token}` } })
       .then((data) => {
@@ -89,7 +104,7 @@ export default function PatientHome({ onNavigate, onLogout }) {
     setSavingMood(true);
 
     try {
-      await api.post("/patient/mood",{ mood: nextMood },{ headers: { Authorization: `Bearer ${token}` } });
+      await api.post("/patient/mood", { mood: nextMood }, { headers: { Authorization: `Bearer ${token}` } });
     } catch (error) {
       console.error(error);
     } finally {
@@ -115,96 +130,139 @@ export default function PatientHome({ onNavigate, onLogout }) {
     }
   };
 
+  const handleHelpCall = () => {
+    window.location.href = "tel:+112";
+  };
+
   const hour = new Date().getHours();
-  const userName =typeof window !== "undefined" ? window.localStorage.getItem("full_name") || "there": "there";
+  const moodLabel = mood === "good" ? "Happy" : mood === "okay" ? "Okay" : mood === "low" ? "Not good" : "Not set";
+  const reminderStatus = reminderDone ? "All clear" : todayReminder ? "1 reminder" : "No pending reminder";
 
   return (
-    <div className="min-h-screen bg-[#FBF8F2] text-[#20261F] font-sans">
-      <PatientNavigation onNavigate={navigate} onLogout={onLogout} activePage="home"/>
-      <header className="mx-auto max-w-3xl px-6 pb-4 pt-8">
-        <div className="rounded-3xl border border-[#E4DCC8] bg-[#F7F3EC] p-6 shadow-sm sm:p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2F6F62]"> Welcome
-          </p>
-          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{getGreeting(hour)}, {userName}!</h1>
-          <p className="mt-2 text-lg text-[#5B6459]">What would you like to do today?
-          </p>
+    <div className="min-h-screen bg-[#FBF8F2] text-[#20261F]" style={{ fontFamily: "'Atkinson Hyperlegible', 'Segoe UI', sans-serif" }}>
+      <PatientNavigation onNavigate={navigate} onLogout={onLogout} activePage="home" />
+
+      <header className="mx-auto max-w-5xl px-5 pb-4 pt-8 sm:px-6">
+        <div className="rounded-[30px] border border-[#E4DCC8] bg-[#F7F3EC] p-6 shadow-sm sm:p-8">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#2F6F62]">Welcome</p>
+          <h1 className="mt-3 text-4xl font-bold leading-tight sm:text-5xl">{getGreeting(hour)}, {userName}!</h1>
+          <p className="mt-3 text-xl leading-relaxed text-[#5B6459]">What would you like to do today?</p>
         </div>
       </header>
 
-      <div className="mx-auto max-w-2xl px-6">
-        <button type="button" className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#B23A3A] py-5 text-2xl font-bold text-white shadow-md active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2">
-          <PhoneCall className="h-7 w-7" aria-hidden="true" />
-          Call for Help
-        </button>
-      </div>
+      <main className="mx-auto max-w-5xl px-5 pb-16 sm:px-6">
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-[24px] border-2 border-[#E4DCC8] bg-[#EFEEE6] p-4">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#5B6459]">Mood</p>
+            <p className="mt-2 text-2xl font-bold text-[#20261F]">{moodLabel}</p>
+          </div>
+          <div className="rounded-[24px] border-2 border-[#E4DCC8] bg-[#F3E7D0] p-4">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#8A4E12]">Today</p>
+            <p className="mt-2 text-2xl font-bold text-[#20261F]">{reminderStatus}</p>
+          </div>
+          <div className="rounded-[24px] border-2 border-[#E4DCC8] bg-[#E4F0EC] p-4">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#2F6F62]">Support</p>
+            <p className="mt-2 text-2xl font-bold text-[#20261F]">Ready</p>
+          </div>
+        </div>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <section className="rounded-[28px] border-[3px] border-[#C97A2B] bg-[#F3E7D0] p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-lg font-bold text-[#8A4E12]">Today's reminder</p>
+                <p className="mt-3 text-3xl font-bold leading-tight text-[#20261F]">
+                  {reminderDone ? (todayReminder ? "Reminder marked as done" : "Medicine marked as done") : (todayReminder?.title || "Take your medicine")}
+                </p>
+              </div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/60 text-[#8A4E12]">
+                <PhoneCall className="h-7 w-7" aria-hidden="true" />
+              </div>
+            </div>
 
-      <main className="mx-auto max-w-2xl px-6">
-        <section className="mt-6 rounded-3xl border-[3px] border-[#C97A2B] bg-[#F3E7D0] p-6">
-          <p className="text-lg font-bold text-[#8A4E12]">Today's reminder</p>
-          <p className="mt-2 text-2xl font-bold">
-            {reminderDone
-              ? (todayReminder ? "Reminder marked as done" : "Medicine marked as done")
-              : (todayReminder?.title || "Take your medicine")}
-          </p>
-          <p className="mt-1 text-lg text-[#6B4A1E]">
-            {reminderDone ? "No pending reminder left for today." : (todayReminder?.time || "Due at 8:00 AM")}
-          </p>
+            <p className="mt-4 text-xl text-[#6B4A1E]">
+              {reminderDone ? "No pending reminder left for today." : (todayReminder?.time || "Due at 8:00 AM")}
+            </p>
+
+            <button
+              type="button"
+              onClick={handleReminderComplete}
+              disabled={reminderDone || !todayReminder}
+              className={[
+                "mt-5 w-full rounded-2xl py-4 text-xl font-bold text-white transition active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70",
+                reminderDone || !todayReminder ? "bg-[#5B6459]" : "bg-[#C97A2B]",
+              ].join(" ")}
+            >
+              {reminderDone ? "Done for now" : (!todayReminder ? "No reminder left" : "Mark as Done")}
+            </button>
+          </section>
+
           <button
             type="button"
-            onClick={handleReminderComplete}
-            disabled={reminderDone || !todayReminder}
-            className={[
-              "mt-4 w-full rounded-xl py-4 text-xl font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2 disabled:opacity-70",
-              reminderDone || !todayReminder ? "bg-[#5B6459]" : "bg-[#C97A2B]",
-            ].join(" ")}
+            onClick={handleHelpCall}
+            className="flex w-full items-center justify-center gap-4 rounded-[28px] bg-[#B23A3A] px-6 py-6 text-left text-white shadow-[0_18px_30px_rgba(178,58,58,0.18)] transition hover:bg-[#9d2e2e] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2"
           >
-            {reminderDone ? "Done for now" : (!todayReminder ? "No reminder left" : "Mark as Done")}
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
+              <PhoneCall className="h-7 w-7" aria-hidden="true" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold">Call for Help</div>
+              <div className="text-base text-white/80">Need support now?</div>
+            </div>
           </button>
-        </section>
-        <section className="mt-8" aria-labelledby="activities-heading">
-          <h2 id="activities-heading" className="text-2xl font-bold">Activities</h2>
-          <div className="mt-4 flex flex-col gap-4">
+        </div>
+
+        <section className="mt-8 rounded-[28px] border-2 border-[#E4DCC8] bg-[#EFEEE6] p-6 shadow-sm" aria-labelledby="activities-heading">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <h2 id="activities-heading" className="text-3xl font-bold text-[#20261F]">What would you like to do?</h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {PRIMARY_ACTIVITIES.map(({ icon: Icon, label, sub, tint, path }) => (
-              <button key={label} type="button" onClick={() => navigate(path)} className="flex items-center gap-5 rounded-2xl border-2 border-[#E4DCC8] bg-white p-5 text-left shadow-sm active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full" style={{ background: tint }}>
+              <button
+                key={label}
+                type="button"
+                onClick={() => navigate(path)}
+                className="flex h-full flex-col items-start gap-4 rounded-[24px] border-2 border-[#E4DCC8] bg-white p-5 text-left shadow-sm transition hover:border-[#2F6F62] hover:shadow-md active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2"
+              >
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: tint }}>
                   <Icon className="h-8 w-8 text-white" aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{label}</p>
-                  <p className="text-lg text-[#5B6459]">{sub}</p>
+                  <p className="text-2xl font-bold text-[#20261F]">{label}</p>
+                  <p className="mt-1 text-lg leading-relaxed text-[#5B6459]">{sub}</p>
                 </div>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="mt-8 pb-16 mb-16 rounded-3xl border-2 border-[#E4DCC8] bg-[#EFEEE6] p-6 text-center">
-          <p className="text-xl font-bold">How are you feeling today?</p>
-          <div className="mt-5 flex justify-center gap-4 sm:gap-6">
-            <button type="button" onClick={() => saveMoodSelection("good")} disabled={savingMood} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2 disabled:opacity-70">
-              <span className={[ "flex h-20 w-20 items-center justify-center rounded-full border", mood === "good" ? "border-[3px] border-[#20261F] bg-[#2F6F62]" : "border-[#C9C2B2] bg-white", ].join(" ")}>
-                <Smile className={[ "h-10 w-10", mood === "good" ? "text-white" : "text-[#2F6F62]", ].join(" ")} aria-hidden="true"/>
-              </span>
-              <span className="text-lg font-bold">Good</span>
-            </button>
-
-            <button type="button" onClick={() => saveMoodSelection("okay")} disabled={savingMood} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2 disabled:opacity-70">
-              <span className={[ "flex h-20 w-20 items-center justify-center rounded-full border", mood === "okay" ? "border-[3px] border-[#20261F] bg-[#C97A2B]" : "border-[#C9C2B2] bg-white", ].join(" ")}>
-                <Meh className={[ "h-10 w-10", mood === "okay" ? "text-white" : "text-[#C97A2B]", ].join(" ")} aria-hidden="true" />
-              </span>
-              <span className="text-lg font-bold">Okay</span>
-            </button>
-
-            <button type="button" onClick={() => saveMoodSelection("low")} disabled={savingMood} className="flex flex-col items-center gap-2 rounded-2xl p-2 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2 disabled:opacity-70">
-              <span className={[ "flex h-20 w-20 items-center justify-center rounded-full border", mood === "low" ? "border-[3px] border-[#20261F] bg-[#B23A3A]" : "border-[#C9C2B2] bg-white", ].join(" ")}>
-                <Frown className={[ "h-10 w-10", mood === "low" ? "text-white" : "text-[#B23A3A]", ].join(" ")} aria-hidden="true"/>
-              </span>
-              <span className="text-lg font-bold">Not good</span>
-            </button>
+        <section className="mt-8 rounded-[28px] border-2 border-[#E4DCC8] bg-[#EFEEE6] p-6 shadow-sm">
+          <p className="text-2xl font-bold text-[#20261F]">How are you feeling today?</p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+            {[
+              { key: "good", label: "Happy", icon: Smile, activeClass: "bg-[#2F6F62] text-white", inactiveClass: "bg-white text-[#2F6F62]" },
+              { key: "okay", label: "Okay", icon: Meh, activeClass: "bg-[#C97A2B] text-white", inactiveClass: "bg-white text-[#C97A2B]" },
+              { key: "low", label: "Not good", icon: Frown, activeClass: "bg-[#B23A3A] text-white", inactiveClass: "bg-white text-[#B23A3A]" },
+            ].map(({ key, label, icon: Icon, activeClass, inactiveClass }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => saveMoodSelection(key)}
+                disabled={savingMood}
+                className="flex flex-col items-center gap-3 rounded-[24px] border-2 border-[#E4DCC8] bg-white p-4 text-center transition hover:border-[#2F6F62] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <span className={[
+                  "flex h-20 w-20 items-center justify-center rounded-full border-2 border-[#D9D0C2] transition",
+                  mood === key ? `border-[3px] ${activeClass}` : inactiveClass,
+                ].join(" ")}>
+                  <Icon className="h-10 w-10" aria-hidden="true" />
+                </span>
+                <span className="text-xl font-bold text-[#20261F]">{label}</span>
+              </button>
+            ))}
           </div>
         </section>
       </main>
-
     </div>
   );
 }

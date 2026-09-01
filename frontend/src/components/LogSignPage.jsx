@@ -54,13 +54,13 @@ export default function LogSignPage({ onNavigate }) {
     if (!isAuthenticated || !user) return;
 
     const resolvedRole = getUserRole(user);
+    const targetPath = resolvedRole === "caretaker" ? "/caretaker" : "/homepage";
 
-    if (resolvedRole === "caretaker") {
-      navigate("/caretaker");
-    } else {
-      navigate("/homepage");
+    if (window.location.pathname !== targetPath) {
+      window.history.replaceState({}, "", targetPath);
+      window.dispatchEvent(new PopStateEvent("popstate"));
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user]);
 
   const switchMode = (nextMode) => {
     setMode(nextMode);
@@ -231,430 +231,245 @@ export default function LogSignPage({ onNavigate }) {
 
   return (
     <div
-      className="theme-page min-h-screen"
+      className="min-h-screen"
       style={{
         background: "#FBF8F2",
         color: "#20261F",
-        fontFamily:
-          "'Atkinson Hyperlegible', system-ui, sans-serif",
+        fontFamily: "'Atkinson Hyperlegible', 'Segoe UI', sans-serif",
       }}
     >
-      {/* Top navigation */}
-      <nav
-        className="border-b px-6 py-4"
-        style={{
-          borderColor: "#E4DCC8",
-          background: "rgba(255,255,255,0.92)",
-        }}
-      >
+      <nav className="border-b border-[#E4DCC8] bg-[#FFFDF9]/90 px-6 py-4 backdrop-blur-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="text-xl font-bold tracking-tight"
+            className="flex items-center gap-3 text-left"
           >
-            Maitri
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#2F6F62] text-white shadow-sm">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold tracking-tight text-[#20261F]">Maitri</div>
+            </div>
           </button>
 
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 rounded-full border-2 px-4 py-2 font-semibold transition hover:bg-white"
-            style={{
-              color: "#5B6459",
-              borderColor: "#C9C2B2",
-            }}
+            className="flex items-center gap-2 rounded-full border-2 border-[#C9C2B2] bg-white px-4 py-2 text-base font-semibold text-[#5B6459] shadow-sm transition hover:bg-[#F7F4EE]"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back
           </button>
         </div>
       </nav>
 
-      {/* Main */}
-      <main className="flex min-h-[calc(100vh-73px)] items-center justify-center px-5 py-10">
-        <div className="w-full max-w-md">
-
-          {/* Header */}
-          <div className="mb-7 text-center">
-            <div
-              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-              style={{
-                background: "#2F6F62",
-              }}
-            >
-              <ShieldCheck
-                className="h-7 w-7 text-white"
-                strokeWidth={2}
-              />
+      <main className="mx-auto flex min-h-[calc(100vh-73px)] max-w-6xl items-center justify-center px-5 py-8 sm:px-6 lg:px-8">
+        <div className="grid w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="hidden rounded-[32px] border border-[#E4DCC8] bg-[#F7F3EC] p-8 shadow-sm lg:block">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2F6F62] text-white shadow-sm">
+                <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <span className="text-sm font-bold uppercase tracking-[0.2em] text-[#2F6F62]">Maitri Care</span>
             </div>
 
-            <h1 className="text-3xl font-bold">
-              {mode === "login"
-                ? "Welcome back"
-                : "Create your account"}
-            </h1>
-
-            <p
-              className="mt-2 text-base"
-              style={{ color: "#5B6459" }}
-            >
-              {mode === "login"
-                ? "Sign in to continue to Maitri."
-                : "Create an account for your care journey."}
+            <h1 className="text-4xl font-bold leading-tight text-[#20261F]">A calmer way to care and connect.</h1>
+            <p className="mt-4 max-w-md text-xl leading-relaxed text-[#5B6459]">
+              Simple support for older adults and their caregivers to stay connected, informed, and confident every day.
             </p>
-          </div>
 
-          {/* Card */}
-          <div
-            className="overflow-hidden rounded-3xl border-2 shadow-sm"
-            style={{
-              background: "#EFEEE6",
-              borderColor: "#E4DCC8",
-            }}
-          >
-            {/* Tabs */}
-            <div
-              className="grid grid-cols-2 border-b-2"
-              style={{
-                borderColor: "#E4DCC8",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => switchMode("login")}
-                className="py-4 text-base font-bold transition"
-                style={{
-                  background:
-                    mode === "login" ? "#FFFFFF" : "transparent",
-                  color:
-                    mode === "login"
-                      ? "#2F6F62"
-                      : "#5B6459",
-                  borderBottom:
-                    mode === "login"
-                      ? "3px solid #2F6F62"
-                      : "3px solid transparent",
-                }}
-              >
-                Login
-              </button>
+            <div className="mt-8 space-y-4">
+              {[
+                "Clear reminders and daily support",
+                "Easy access to games, stories, and talk",
+                "A warm, readable experience built for comfort",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-2xl border border-[#E4DCC8] bg-white/60 px-4 py-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E4F0EC] text-[#2F6F62] font-bold">✓</div>
+                  <span className="text-lg font-medium text-[#20261F]">{item}</span>
+                </div>
+              ))}
+            </div>
+          </section>
 
-              <button
-                type="button"
-                onClick={() => switchMode("signup")}
-                className="py-4 text-base font-bold transition"
-                style={{
-                  background:
-                    mode === "signup"
-                      ? "#FFFFFF"
-                      : "transparent",
-                  color:
-                    mode === "signup"
-                      ? "#2F6F62"
-                      : "#5B6459",
-                  borderBottom:
-                    mode === "signup"
-                      ? "3px solid #2F6F62"
-                      : "3px solid transparent",
-                }}
-              >
-                Sign Up
-              </button>
+          <section className="w-full max-w-md justify-self-center">
+            <div className="mb-6 text-center lg:text-left">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#2F6F62] shadow-sm lg:mx-0">
+                <ShieldCheck className="h-8 w-8 text-white" aria-hidden="true" />
+              </div>
+              <h2 className="text-4xl font-bold leading-none text-[#20261F]">
+                {mode === "login" ? "Welcome back" : "Create your account"}
+              </h2>
+              <p className="mt-3 text-lg leading-relaxed text-[#5B6459]">
+                {mode === "login"
+                  ? "Sign in to continue to your care routine."
+                  : "Set up your account to begin your care journey."}
+              </p>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5 p-6 sm:p-7"
-            >
-              {/* Full name */}
-              {mode === "signup" && (
-                <div>
-                  <label
-                    htmlFor="full-name"
-                    className="mb-2 block text-sm font-semibold"
-                    style={{ color: "#5B6459" }}
-                  >
-                    Full name
-                  </label>
-
-                  <input
-                    id="full-name"
-                    value={fullName}
-                    onChange={(e) =>
-                      setFullName(e.target.value)
-                    }
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Your full name"
-                    className="w-full rounded-xl border-2 bg-white px-4 py-3 text-base outline-none transition focus:border-[#2F6F62]"
-                    style={{
-                      borderColor: "#C9C2B2",
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="mb-2 block text-sm font-semibold"
-                  style={{ color: "#5B6459" }}
-                >
-                  Email address
-                </label>
-
-                <input
-                  id="email"
-                  value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl border-2 bg-white px-4 py-3 text-base outline-none transition focus:border-[#2F6F62]"
-                  style={{
-                    borderColor: "#C9C2B2",
-                  }}
-                />
-              </div>
-
-              {/* Role */}
-              {mode === "signup" && (
-                <fieldset>
-                  <legend
-                    className="mb-2 block text-sm font-semibold"
-                    style={{ color: "#5B6459" }}
-                  >
-                    I am signing up as
-                  </legend>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <label
-                      className="cursor-pointer rounded-xl border-2 bg-white p-3 transition"
-                      style={{
-                        borderColor:
-                          role === "patient"
-                            ? "#2F6F62"
-                            : "#C9C2B2",
-                        background:
-                          role === "patient"
-                            ? "#F3E7D0"
-                            : "#FFFFFF",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="role"
-                        value="patient"
-                        checked={role === "patient"}
-                        onChange={(e) =>
-                          setRole(e.target.value)
-                        }
-                        className="sr-only"
-                      />
-
-                      <div className="font-bold">
-                        Elder patient
-                      </div>
-
-                      <div
-                        className="mt-1 text-xs"
-                        style={{ color: "#5B6459" }}
-                      >
-                        For the person receiving care
-                      </div>
-                    </label>
-
-                    <label
-                      className="cursor-pointer rounded-xl border-2 bg-white p-3 transition"
-                      style={{
-                        borderColor:
-                          role === "caretaker"
-                            ? "#2F6F62"
-                            : "#C9C2B2",
-                        background:
-                          role === "caretaker"
-                            ? "#F3E7D0"
-                            : "#FFFFFF",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="role"
-                        value="caretaker"
-                        checked={role === "caretaker"}
-                        onChange={(e) =>
-                          setRole(e.target.value)
-                        }
-                        className="sr-only"
-                      />
-
-                      <div className="font-bold">
-                        Caretaker
-                      </div>
-
-                      <div
-                        className="mt-1 text-xs"
-                        style={{ color: "#5B6459" }}
-                      >
-                        For family or care providers
-                      </div>
-                    </label>
-                  </div>
-                </fieldset>
-              )}
-
-              {/* Password */}
-              <div>
-                <label
-                  htmlFor="password"
-                  className="mb-2 block text-sm font-semibold"
-                  style={{ color: "#5B6459" }}
-                >
-                  Password
-                </label>
-
-                <div className="relative">
-                  <input
-                    id="password"
-                    value={password}
-                    onChange={(e) =>
-                      setPassword(e.target.value)
-                    }
-                    type={
-                      showPassword
-                        ? "text"
-                        : "password"
-                    }
-                    autoComplete={
-                      mode === "login"
-                        ? "current-password"
-                        : "new-password"
-                    }
-                    placeholder="At least 6 characters"
-                    className="w-full rounded-xl border-2 bg-white px-4 py-3 pr-12 text-base outline-none transition focus:border-[#2F6F62]"
-                    style={{
-                      borderColor: "#C9C2B2",
-                    }}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPassword((value) => !value)
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2"
-                    style={{ color: "#5B6459" }}
-                    aria-label={
-                      showPassword
-                        ? "Hide password"
-                        : "Show password"
-                    }
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Forgot password */}
-              {mode === "login" && (
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    className="text-sm font-semibold"
-                    style={{ color: "#2F6F62" }}
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-              )}
-
-              {/* Error */}
-              {error && (
-                <div
-                  className="rounded-xl border-2 p-3 text-sm font-medium"
-                  style={{
-                    color: "#7A2A2A",
-                    background: "#FFF0F0",
-                    borderColor: "#E5B1B1",
-                  }}
-                >
-                  {error}
-                </div>
-              )}
-
-              {/* Success */}
-              {success && (
-                <div
-                  className="rounded-xl border-2 p-3 text-sm font-medium"
-                  style={{
-                    color: "#24594F",
-                    background: "#EEF7F3",
-                    borderColor: "#A9D4C7",
-                  }}
-                >
-                  {success}
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-xl py-3.5 text-base font-bold text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-                style={{
-                  background: "#2F6F62",
-                }}
-              >
-                {loading
-                  ? "Please wait..."
-                  : mode === "login"
-                  ? "Sign In"
-                  : "Create Account"}
-              </button>
-
-              {/* Switch */}
-              <p
-                className="text-center text-sm"
-                style={{ color: "#5B6459" }}
-              >
-                {mode === "login"
-                  ? "Don't have an account?"
-                  : "Already have an account?"}{" "}
+            <div className="overflow-hidden rounded-[28px] border-2 border-[#E4DCC8] bg-[#EFEEE6] shadow-[0_20px_50px_rgba(47,111,98,0.08)]">
+              <div className="grid grid-cols-2 border-b-2 border-[#E4DCC8] bg-[#F5F2EC]">
                 <button
                   type="button"
-                  onClick={() =>
-                    switchMode(
-                      mode === "login"
-                        ? "signup"
-                        : "login"
-                    )
-                  }
-                  className="font-bold"
-                  style={{ color: "#2F6F62" }}
+                  onClick={() => switchMode("login")}
+                  className="py-4 text-lg font-bold transition duration-150"
+                  style={{
+                    background: mode === "login" ? "#FFFFFF" : "transparent",
+                    color: mode === "login" ? "#2F6F62" : "#5B6459",
+                    borderBottom: mode === "login" ? "3px solid #2F6F62" : "3px solid transparent",
+                  }}
                 >
-                  {mode === "login"
-                    ? "Sign up"
-                    : "Log in"}
+                  Login
                 </button>
-              </p>
-            </form>
-          </div>
+                <button
+                  type="button"
+                  onClick={() => switchMode("signup")}
+                  className="py-4 text-lg font-bold transition duration-150"
+                  style={{
+                    background: mode === "signup" ? "#FFFFFF" : "transparent",
+                    color: mode === "signup" ? "#2F6F62" : "#5B6459",
+                    borderBottom: mode === "signup" ? "3px solid #2F6F62" : "3px solid transparent",
+                  }}
+                >
+                  Sign Up
+                </button>
+              </div>
 
-          {/* Small footer */}
-          <p
-            className="mt-5 text-center text-xs"
-            style={{ color: "#7A8178" }}
-          >
-            Your account is securely managed with Supabase.
-          </p>
+              <form onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-6">
+                {mode === "signup" && (
+                  <div>
+                    <label htmlFor="full-name" className="mb-2 block text-base font-semibold text-[#5B6459]">
+                      Full name
+                    </label>
+                    <input
+                      id="full-name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Your full name"
+                      className="w-full rounded-2xl border-2 border-[#C9C2B2] bg-white px-4 py-3.5 text-lg text-[#20261F] outline-none transition focus:border-[#2F6F62] focus:ring-4 focus:ring-[#E4F0EC]"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="email" className="mb-2 block text-base font-semibold text-[#5B6459]">
+                    Email address
+                  </label>
+                  <input
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    className="w-full rounded-2xl border-2 border-[#C9C2B2] bg-white px-4 py-3.5 text-lg text-[#20261F] outline-none transition focus:border-[#2F6F62] focus:ring-4 focus:ring-[#E4F0EC]"
+                  />
+                </div>
+
+                {mode === "signup" && (
+                  <fieldset>
+                    <legend className="mb-2 block text-base font-semibold text-[#5B6459]">I am signing up as</legend>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label
+                        className="cursor-pointer rounded-2xl border-2 p-3 transition-all"
+                        style={{
+                          borderColor: role === "patient" ? "#2F6F62" : "#C9C2B2",
+                          background: role === "patient" ? "#F3E7D0" : "#FFFFFF",
+                          boxShadow: role === "patient" ? "0 8px 16px rgba(47,111,98,0.08)" : "none",
+                        }}
+                      >
+                        <input type="radio" name="role" value="patient" checked={role === "patient"} onChange={(e) => setRole(e.target.value)} className="sr-only" />
+                        <div className="text-base font-bold text-[#20261F]">Elder patient</div>
+                        <div className="mt-1 text-sm text-[#5B6459]">For the person receiving care</div>
+                      </label>
+
+                      <label
+                        className="cursor-pointer rounded-2xl border-2 p-3 transition-all"
+                        style={{
+                          borderColor: role === "caretaker" ? "#2F6F62" : "#C9C2B2",
+                          background: role === "caretaker" ? "#F3E7D0" : "#FFFFFF",
+                          boxShadow: role === "caretaker" ? "0 8px 16px rgba(47,111,98,0.08)" : "none",
+                        }}
+                      >
+                        <input type="radio" name="role" value="caretaker" checked={role === "caretaker"} onChange={(e) => setRole(e.target.value)} className="sr-only" />
+                        <div className="text-base font-bold text-[#20261F]">Caretaker</div>
+                        <div className="mt-1 text-sm text-[#5B6459]">For family or care providers</div>
+                      </label>
+                    </div>
+                  </fieldset>
+                )}
+
+                <div>
+                  <label htmlFor="password" className="mb-2 block text-base font-semibold text-[#5B6459]">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      type={showPassword ? "text" : "password"}
+                      autoComplete={mode === "login" ? "current-password" : "new-password"}
+                      placeholder="At least 6 characters"
+                      className="w-full rounded-2xl border-2 border-[#C9C2B2] bg-white px-4 py-3.5 pr-12 text-lg text-[#20261F] outline-none transition focus:border-[#2F6F62] focus:ring-4 focus:ring-[#E4F0EC]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-[#5B6459] transition hover:bg-[#F7F4EE]"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
+                    </button>
+                  </div>
+                </div>
+
+                {mode === "login" && (
+                  <div className="flex justify-end">
+                    <button type="button" className="text-base font-semibold text-[#2F6F62] underline-offset-4 hover:underline">
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="rounded-2xl border-2 border-[#E5B1B1] bg-[#FFF0F0] px-4 py-3 text-base font-medium text-[#7A2A2A]">
+                    {error}
+                  </div>
+                )}
+
+                {success && (
+                  <div className="rounded-2xl border-2 border-[#A9D4C7] bg-[#EEF7F3] px-4 py-3 text-base font-medium text-[#24594F]">
+                    {success}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-2xl bg-[#2F6F62] py-4 text-lg font-bold text-white shadow-[0_12px_20px_rgba(47,111,98,0.2)] transition hover:bg-[#245C54] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {loading ? "Please wait..." : mode === "login" ? "Sign In" : "Create Account"}
+                </button>
+
+                <p className="text-center text-base text-[#5B6459]">
+                  {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+                  <button
+                    type="button"
+                    onClick={() => switchMode(mode === "login" ? "signup" : "login")}
+                    className="font-bold text-[#2F6F62] underline-offset-4 hover:underline"
+                  >
+                    {mode === "login" ? "Sign up" : "Log in"}
+                  </button>
+                </p>
+              </form>
+            </div>
+
+            <p className="mt-5 text-center text-sm text-[#7A8178]">Secure session-based access for your patient and caregiver experience.</p>
+          </section>
         </div>
       </main>
     </div>

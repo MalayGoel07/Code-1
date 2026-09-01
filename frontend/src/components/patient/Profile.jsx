@@ -18,6 +18,7 @@ export default function Profile({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [profile, setProfile] = useState({
     name: "",
     age: "",
@@ -26,7 +27,8 @@ export default function Profile({ onNavigate }) {
     games_played: [],
   });
 
-  const userName =typeof window !== "undefined" ? window.localStorage.getItem("full_name") || "there" : "there";
+  const userName = profile.name?.trim() || "there";
+
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
@@ -37,38 +39,76 @@ export default function Profile({ onNavigate }) {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const data = await api.get("/patient/me", { headers: { Authorization: `Bearer ${token}` } });
-        setProfile({
-          name: data.full_name || data.username || "",
-          age: data.age !== null && data.age !== undefined ? String(data.age) : "",
-          language: data.preferred_language || "English",
-          caregiver_email: data.caregiver_email || data.caregiver || "",
-          games_played: Array.isArray(data.games_played) ? data.games_played : [],
+        setError("");
+
+        const data = await api.get("/patient/me", {
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (data.full_name) {localStorage.setItem("full_name", data.full_name);}} 
-        catch (err) {setError(err.message || "Unable to load profile.");} 
-        finally {setLoading(false);}
+        const nextProfile = {
+          name: data.full_name || data.username || "",
+          age:
+            data.age === null || data.age === undefined || data.age === ""
+              ? ""
+              : String(data.age),
+          language: data.preferred_language || "English",
+          caregiver_email: data.caregiver_email || "",
+          games_played: Array.isArray(data.games_played) ? data.games_played : [],
+        };
+
+        setProfile(nextProfile);
+
+        if (nextProfile.name) {
+          localStorage.setItem("full_name", nextProfile.name);
+        } else {
+          localStorage.removeItem("full_name");
+        }
+      } catch (err) {
+        setError(err.message || "Unable to load profile.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProfile();
   }, [navigate]);
 
-  const handleProfileChange = (field, value) => {setProfile((currentProfile) => ({ ...currentProfile, [field]: value }));};
+  const handleProfileChange = (field, value) => {
+    setProfile((currentProfile) => ({ ...currentProfile, [field]: value }));
+    setError("");
+    setSuccessMessage("");
+  };
 
   const handleSaveProfile = async () => {
     try {
       setSaving(true);
       setError("");
+      setSuccessMessage("");
 
       const token = localStorage.getItem("access_token");
+      const nextName = (profile.name ?? "").trim();
+      const nextAgeValue =
+        profile.age === "" || profile.age === null || profile.age === undefined
+          ? null
+          : Number(profile.age);
+
+      if (
+        profile.age !== "" &&
+        profile.age !== null &&
+        profile.age !== undefined &&
+        (!Number.isFinite(nextAgeValue) || Number.isNaN(nextAgeValue))
+      ) {
+        setError("Please enter a valid age.");
+        return;
+      }
+
       await api.put(
         "/patient/me",
         {
-          full_name: profile.name,
-          age: profile.age === "" ? null : Number(profile.age),
-          preferred_language: profile.language,
-          caregiver_email: profile.caregiver_email,
+          full_name: nextName || "",
+          age: nextAgeValue,
+          preferred_language: profile.language || "English",
+          caregiver_email: (profile.caregiver_email ?? "").trim(),
         },
         {
           headers: {
@@ -77,7 +117,13 @@ export default function Profile({ onNavigate }) {
         }
       );
 
-      localStorage.setItem("full_name", profile.name || userName || "there");
+      const savedName = nextName || "there";
+      setProfile((currentProfile) => ({
+        ...currentProfile,
+        name: savedName,
+      }));
+      localStorage.setItem("full_name", savedName);
+      setSuccessMessage("Profile saved.");
       setIsEditing(false);
     } catch (err) {
       setError(err.message || "Unable to save profile.");
@@ -116,14 +162,21 @@ export default function Profile({ onNavigate }) {
             )}
           </button>
           {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
+          {!error && successMessage && <p className="mt-4 text-center text-sm text-green-700">{successMessage}</p>}
+          {loading && !error && <p className="mt-4 text-center text-sm text-[#5B6459]">Loading your profile...</p>}
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl">
-          <h2 className="mb-5 text-2xl font-bold">Personal Information</h2>
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <h2 className="text-2xl font-bold">Personal Information</h2>
+            <span className="rounded-full border border-[#2F6F62] bg-[#E4F0EC] px-3 py-1 text-sm font-bold text-[#2F6F62]">
+              Care plan
+            </span>
+          </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div className="rounded-3xl p-5" style={{ background: "#EFEEE6", border: "2px solid #E4DCC8", }} >
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full" style={{ bckground: "#F3E7D0", color: "#8A4E12", }}>
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full" style={{ background: "#F3E7D0", color: "#8A4E12", }}>
                   <UserRound className="h-7 w-7" aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -147,7 +200,7 @@ export default function Profile({ onNavigate }) {
                   {isEditing ? (
                     <input type="number" value={profile.age} onChange={(event) => handleProfileChange( "age", event.target.value ) } className="mt-1 w-full rounded-xl border-2 bg-white px-3 py-2 text-lg font-bold outline-none focus:ring-4 focus:ring-[#2F6F62]/20" style={{   borderColor: "#C9C2B2", }}/>
                   ) : (
-                    <p className="mt-1 text-xl font-bold">{profile.age} years</p>
+                    <p className="mt-1 text-xl font-bold">{profile.age ? `${profile.age} years` : "Not provided"}</p>
                   )}
                 </div>
 
@@ -191,7 +244,7 @@ export default function Profile({ onNavigate }) {
                   <p className="text-base font-bold" style={{ color: "#5B6459" }}>Caregiver's Email</p>
                   {isEditing ? (
                     <input type="text" value={profile.caregiver_email} onChange={(event) => handleProfileChange( "caregiver_email",  event.target.value ) } className="mt-1 w-full rounded-xl border-2 bg-white px-3 py-2 text-lg font-bold outline-none focus:ring-4 focus:ring-[#2F6F62]/20" style={{   borderColor: "#C9C2B2", }}/>
-                  ) : (<p className="mt-1 text-xl font-bold">{profile.caregiver_email}</p>
+                  ) : (<p className="mt-1 text-xl font-bold">{profile.caregiver_email || "Not provided"}</p>
                   )}
                 </div>
               </div>
