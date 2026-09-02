@@ -21,7 +21,7 @@ const clearStaleSession = () => {
     return;
   }
 
-  const protectedPaths = ["/homepage", "/game", "/pattern-game", "/elder-ai", "/reminder", "/medications", "/profile", "/story", "/caretaker", "/caretaker/report", "/caretaker/reminders", "/caretaker/help", "/caretaker/profile", "/caretaker/settings"];
+  const protectedPaths = ["/homepage", "/game", "/pattern-game", "/elder-ai", "/reminder", "/medications", "/profile", "/story", "/patient/activities", "/caretaker", "/caretaker/report", "/caretaker/activities", "/caretaker/reminders", "/caretaker/help", "/caretaker/profile", "/caretaker/settings"];
 
       window.localStorage.removeItem("access_token");
   window.localStorage.removeItem("user_role");

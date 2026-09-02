@@ -12,6 +12,8 @@ import ElderAi from "./components/patient/ElderAi";
 import Story from "./components/patient/Story";
 import Profile from "./components/patient/Profile";
 import PatternGame from "./components/games/pattern";
+import PatientActivities from "./components/patient/PatientActivities";
+import ActivityPlayer from "./components/patient/ActivityPlayer";
 import { useAuth } from "./hooks/useAuth";
 import { getUserRole, isCaretakerRole, isPatientRole } from "./lib/roles";
 
@@ -41,6 +43,7 @@ export default function App() {
     () => [
       "/caretaker",
       "/caretaker/report",
+      "/caretaker/activities",
       "/caretaker/reminders",
       "/caretaker/help",
       "/caretaker/profile",
@@ -59,6 +62,7 @@ export default function App() {
       "/medications",
       "/profile",
       "/story",
+      "/patient/activities",
     ],
     []
   );
@@ -78,7 +82,8 @@ export default function App() {
       return;
     }
 
-    const isProtectedPatientRoute = protectedPatientRoutes.includes(pathname);
+    const isProtectedPatientRoute =
+      protectedPatientRoutes.includes(pathname) || pathname.startsWith("/patient/activities/");
     const isProtectedCaretakerRoute = protectedCaretakerRoutes.includes(pathname);
 
     let nextPath = null;
@@ -119,6 +124,7 @@ export default function App() {
     const caretakerTabs = {
       "/caretaker": "overview",
       "/caretaker/report": "report",
+      "/caretaker/activities": "activities",
       "/caretaker/reminders": "reminders",
       "/caretaker/help": "help",
       "/caretaker/profile": "profile",
@@ -140,6 +146,15 @@ export default function App() {
 
   if (pathname === "/DementiaPage") {
     return <DementiaPage onNavigate={navigate} />;
+  }
+
+  if (pathname === "/patient/activities") {
+    return <PatientActivities onNavigate={navigate} />;
+  }
+
+  if (pathname.startsWith("/patient/activities/")) {
+    const activityId = pathname.split("/")[3] || null;
+    return <ActivityPlayer onNavigate={navigate} activityId={activityId} />;
   }
 
   if (pathname === "/game") {

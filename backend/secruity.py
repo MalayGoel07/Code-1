@@ -1,143 +1,162 @@
-from datetime import datetime, timedelta, timezone
-import os
+﻿"""Security layer: Supabase Auth + verified JWT, backed by the profiles table.
+
+Legacy authentication code (pwdlib hashing, backend-issued tokens) has been
+removed (problem #5). Supabase Auth is the single authentication system:
+
+  1. The Bearer token is verified cryptographically (supabase_config.py).
+  2. The user's profile and ROLE are loaded from the `profiles` table â€”
+     never trusted from token metadata (problem #4).
+  3. Missing profiles are auto-provisioned on first request so that users
+     who signed up through the frontend still work seamlessly.
+"""
+
+from __future__ import annotations
+
 from typing import Annotated
 
-import jwt
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
-from pwdlib import PasswordHash
 
 try:
-    from .db import users_collection
-    from .supabase_config import verify_supabase_token
+    from . import supabase_db
+    from .supabase_config import SupabaseTokenPayload, verify_supabase_token
 except ImportError:
-    from db import users_collection
-    from supabase_config import verify_supabase_token
+    import supabase_db
+    from supabase_config import SupabaseTokenPayload, verify_supabase_token
 
-load_dotenv()
-
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me-please-use-env")
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+load_dotenv(encoding="utf-8-sig")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
-password_hash = PasswordHash.recommended()
 
+CREDENTIALS_EXCEPTION = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    role: str | None = None
+VALID_ROLES = {"patient", "caretaker"}
 
 
 class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    role: str | None = None
-    disabled: bool = False
+    """Authenticated user resolved from a verified JWT + the profiles table."""
 
-
-class UserSignup(BaseModel):
-    username: str
+    id: str
+    username: str = ""
     email: str
-    full_name: str
-    password: str
+    full_name: str = ""
     role: str = "patient"
+    profile: dict | None = None
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return password_hash.verify(plain_password, hashed_password)
+def _coerce_role(value: str | None) -> str:
+    role = (value or "").strip().lower()
+    return role if role in VALID_ROLES else "patient"
 
 
-def get_password_hash(password: str) -> str:
-    return password_hash.hash(password)
-
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=30))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def get_user_by_email(email: str) -> User | None:
-    """Look up a user in the in-memory store by email."""
-    user = users_collection.find_one({"email": email})
-    if not user:
-        return None
+def _build_user(payload: SupabaseTokenPayload, profile: dict | None) -> User:
+    profile = profile or {}
     return User(
-        username=user.get("username", user.get("email", "")),
-        email=user.get("email"),
-        full_name=user.get("full_name"),
-        role=user.get("role", "patient"),
-        disabled=user.get("disabled", False),
+        id=payload.sub,
+        username=payload.email,
+        email=payload.email,
+        full_name=profile.get("full_name") or payload.full_name or "",
+        # Role authority is the DATABASE row, not the token metadata.
+        role=_coerce_role(profile.get("role")),
+        profile=profile,
     )
 
 
-async def get_current_user(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User:
-    """Authenticate requests using a Supabase JWT access token.
+def _provision_profile(payload: SupabaseTokenPayload, token: str | None) -> dict | None:
+    """Create the profiles row for a first-time user. DB errors are not fatal
+    here; the request proceeds with token-derived display data.
 
-    The frontend now uses Supabase Auth directly and sends the Supabase
-    access_token in the Authorization: Bearer <token> header.  We verify
-    that token, then look up (or lazily create) the matching profile in
-    the in-memory store so the rest of the application continues to work
-    unchanged.
+    Security: the initial role is ALWAYS 'patient'. Token metadata is attacker
+    controlled (users choose their own user_metadata at signup), so it must
+    never grant elevated roles. The declared role is stored only through the
+    explicit /auth/setup-profile endpoint.
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    role = "patient"
+    try:
+        return supabase_db.create_profile(
+            user_id=payload.sub,
+            email=payload.email,
+            full_name=payload.full_name,
+            role=role,
+            token=token,
+        )
+    except supabase_db.SupabaseRestError:
+        return {
+            "id": payload.sub,
+            "email": payload.email,
+            "full_name": payload.full_name,
+            "role": role,
+        }
 
+
+def get_current_user(
+    token: Annotated[str | None, Depends(oauth2_scheme)],
+) -> User:
+    """Verify the Supabase JWT, then load (or lazily create) the profile row.
+
+    Raises 401 for: missing token, invalid/expired token signature, or a
+    token without the required subject/email claims.
+    """
     if not token:
-        raise credentials_exception
+        raise CREDENTIALS_EXCEPTION
 
     payload = verify_supabase_token(token)
-    if payload is None or not payload.is_authenticated:
-        raise credentials_exception
+    if payload is None:
+        raise CREDENTIALS_EXCEPTION
 
-    # Look up the user profile by email (email is the stable Supabase identifier).
-    profile = users_collection.find_one({"email": payload.email})
+    try:
+        profile = supabase_db.get_profile_by_id(payload.sub, token=token)
+    except supabase_db.SupabaseRestError:
+        profile = None
 
     if profile is None:
-        # First login — create a profile in the in-memory store.
-        normalized_role = (payload.app_role or "patient").strip().lower()
-        if normalized_role not in {"patient", "caretaker"}:
-            normalized_role = "patient"
+        profile = _provision_profile(payload, token)
 
-        profile_doc = {
-            "username": payload.email,
-            "email": payload.email,
-            "full_name": payload.full_name or payload.email.split("@")[0],
-            "role": normalized_role,
-            "disabled": False,
-            "supabase_id": payload.sub,
-            "medications": [],
-            "reminders": [],
-            "mood_history": [],
-            "games_played": [],
-            "caregiver_email": "",
-            "pending_caregiver_email": "",
-            "pending_caregiver_name": "",
-        }
-        users_collection.insert_one(profile_doc)
-        profile = profile_doc
-
-    return User(
-        username=profile.get("username", payload.email),
-        email=profile.get("email", payload.email),
-        full_name=profile.get("full_name", payload.full_name),
-        role=profile.get("role", payload.app_role),
-        disabled=profile.get("disabled", False),
-    )
+    return _build_user(payload, profile)
 
 
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)]
+def get_current_user_no_provision(
+    token: Annotated[str | None, Depends(oauth2_scheme)],
 ) -> User:
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    """Verify the JWT and load the profile WITHOUT auto-provisioning.
 
+    Used by /auth/setup-profile, which must be able to create the profile
+    itself with the role the user chose at signup — auto-provisioning first
+    would pin the role to 'patient' before onboarding ever runs.
+    """
+    if not token:
+        raise CREDENTIALS_EXCEPTION
+
+    payload = verify_supabase_token(token)
+    if payload is None:
+        raise CREDENTIALS_EXCEPTION
+
+    try:
+        profile = supabase_db.get_profile_by_id(payload.sub, token=token)
+    except supabase_db.SupabaseRestError:
+        profile = None
+
+    return _build_user(payload, profile)
+
+
+def get_current_active_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    return current_user
+
+
+def require_role(current_user: User, *allowed: str) -> User:
+    """Assert the DATABASE-backed role is one of the allowed roles."""
+    role = (current_user.role or "patient").strip().lower()
+    if role not in {r.strip().lower() for r in allowed}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"This action requires role: {' or '.join(allowed)}",
+        )
     return current_user

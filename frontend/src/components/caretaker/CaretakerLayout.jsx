@@ -16,10 +16,12 @@ import HelpBotPage from "./HelpBotPage";
 import ProfilePage from "./ProfilePage";
 import SettingsPage from "./SettingsPage";
 import CaretakerOverview from "./CaretakerOverview";
+import ActivitiesPage from "./ActivitiesPage";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, path: "/caretaker" },
   { id: "report", label: "Elder Care Report", icon: FileText, path: "/caretaker/report" },
+  { id: "activities", label: "Activities", icon: Heart, path: "/caretaker/activities" },
   { id: "reminders", label: "Reminders", icon: Bell, path: "/caretaker/reminders" },
   { id: "help", label: "AI Helpbot", icon: Bot, path: "/caretaker/help" },
   { id: "profile", label: "Profile", icon: User, path: "/caretaker/profile" },
@@ -40,6 +42,8 @@ export default function CaretakerLayout({ onNavigate, onLogout, initialTab = "ov
     switch (active) {
       case "report":
         return <ElderCareReport onNavigate={onNavigate} onLogout={onLogout} />;
+      case "activities":
+        return <ActivitiesPage onNavigate={onNavigate} onLogout={onLogout} />;
       case "reminders":
         return <ReminderPage onNavigate={onNavigate} onLogout={onLogout} />;
       case "help":

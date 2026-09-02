@@ -7,6 +7,7 @@ import {
   UserRound,
   Pill,
   LogOut,
+  Heart,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { id: "stories", label: "Stories", path: "/story", icon: BookOpen },
   { id: "reminders", label: "Reminders", path: "/reminder", icon: Bell },
   { id: "medications", label: "Medicines", path: "/medications", icon: Pill },
+  { id: "activities", label: "Activities", path: "/patient/activities", icon: Heart },
   { id: "profile", label: "Profile", path: "/profile", icon: UserRound },
 ];
 

@@ -48,33 +48,6 @@ const persistAuthState = (session) => {
   window.localStorage.setItem("full_name", fullName);
 };
 
-const readStoredSession = () => {
-  const token = window.localStorage.getItem("access_token");
-  if (!token) {
-    return { session: null, user: null };
-  }
-
-  const role = window.localStorage.getItem("user_role") || "patient";
-  const email = window.localStorage.getItem("user_email") || "";
-  const fullName = window.localStorage.getItem("user_full_name") || "";
-
-  const user = {
-    email,
-    user_metadata: {
-      role,
-      full_name: fullName,
-    },
-    app_metadata: {
-      role,
-    },
-  };
-
-  return {
-    session: { access_token: token },
-    user,
-  };
-};
-
 export function AuthProvider({ children }) {
     const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);

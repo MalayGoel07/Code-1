@@ -1,6 +1,7 @@
-import { useState } from "react";
-import {Layers,Shapes,ListOrdered,Link2,Puzzle,Dice5,} from "lucide-react";
+import { useEffect, useState } from "react";
+import {Layers,Shapes,ListOrdered,Link2,Puzzle,Dice5,TreePine,Heart,} from "lucide-react";
 import PatientNavigation from "./PatientNavigation";
+import { api } from "../../api";
 
 const GAMES = [
   {
@@ -67,6 +68,25 @@ export default function GamePage({ onNavigate }) {
     });
 
   const [comingSoonId, setComingSoonId] = useState(null);
+  const [personal, setPersonal] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get("/patient/activities")
+      .then((data) => {
+        if (!cancelled) {
+          const list = Array.isArray(data?.activities) ? data.activities : [];
+          setPersonal([...list].sort((a, b) => (a.activity_type === "family_tree" ? -1 : 0) - (b.activity_type === "family_tree" ? -1 : 0)));
+        }
+      })
+      .catch(() => {
+        /* Personalized activities are optional here; built-in games still work. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FBF8F2] text-[#20261F] font-sans">
@@ -80,6 +100,40 @@ export default function GamePage({ onNavigate }) {
           <p className="mx-auto mt-3 max-w-xl text-lg text-[#5B6459]">Choose an activity to exercise your mind.
           </p>
         </div>
+
+        {personal.length > 0 && (
+          <section className="mt-6">
+            <h2 className="text-2xl font-bold text-[#20261F]">Your Activities</h2>
+            <p className="mt-1 text-lg text-[#5B6459]">Made for you by your family.</p>
+            <ul className="mt-5 list-none space-y-4 p-0">
+              {personal.map((activity) => {
+                const isFamilyTree = activity.activity_type === "family_tree";
+                const Icon = isFamilyTree ? TreePine : Heart;
+                return (
+                  <li key={activity.id}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/patient/activities/${activity.id}`)}
+                      className="flex w-full items-center gap-5 rounded-3xl border-2 border-[#2F6F62] bg-white p-5 text-left shadow-sm transition hover:bg-[#F0F5F1] active:scale-[0.99]"
+                    >
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#E8F0E6]">
+                        <Icon className="h-8 w-8 text-[#2F6F62]" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-2xl font-bold">
+                          {activity.title || activity.activity_type_label || "Activity"}
+                        </span>
+                        <span className="mt-0.5 block text-base text-[#5B6459]">
+                          {isFamilyTree ? "Learn about your family" : "A personalized activity for you"}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
 
         <ul className="mt-10 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 lg:grid-cols-3">
           {GAMES.map((game) => {
