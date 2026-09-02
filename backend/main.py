@@ -1,26 +1,28 @@
 import io
-import json
 import os
 
 import pandas as pd
-from fastapi import FastAPI, Depends, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 import uvicorn
 import uuid
-from db import users_collection
-from secruity import Token, UserSignup, authenticate_user, create_access_token, get_password_hash, get_current_active_user, User
 from datetime import timedelta
 from typing import Annotated
 from dotenv import load_dotenv
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from patient import router as patient_router
+try:
+    from .db import users_collection
+    from .secruity import Token, get_current_active_user, User
+    from .patient import router as patient_router
+except ImportError:
+    from db import users_collection
+    from secruity import Token, get_current_active_user, User
+    from patient import router as patient_router
 
 load_dotenv()
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 app = FastAPI(title="ML_WorkSHop API", version="0.0.1")
 app.add_middleware( CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"],)
@@ -32,48 +34,56 @@ async def root():
 
 
 #--------------------authentication endpoints--------------------------------------------------------------------------------------------
+#
+# Auth is now handled by Supabase on the frontend.  These endpoints let the
+# React app confirm that the FastAPI backend can verify the Supabase JWT and
+# that the user profile exists (or has been lazily created).
+#
 
-@app.post("/auth/login")
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
-    normalized_role = (user.role or "patient").strip().lower()
-    access_token = create_access_token(
-        data={"sub": user.username, "role": normalized_role},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
-    )
-    return Token(access_token=access_token, token_type="bearer", role=normalized_role)
+@app.get("/auth/me")
+async def auth_me(current_user: Annotated[User, Depends(get_current_active_user)]):
+    """Return the authenticated user's profile from the in-memory store."""
+    profile = users_collection.find_one({"email": current_user.email})
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "role": current_user.role,
+        "profile": profile,
+    }
 
 
-@app.post("/auth/signup")
-async def signup(user: UserSignup) -> Token:
-    existing = users_collection.find_one({
-        "$or": [
-            {"username": user.username},
-            {"email": user.email},
-        ]
-    })
-    if existing:
-        raise HTTPException(status_code=400, detail="Username or email already exists")
+@app.post("/auth/setup-profile")
+async def setup_profile(
+    data: dict,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    """Let a newly-signed-up user set their role and full name on the backend profile.
 
-    normalized_role = (user.role or "patient").strip().lower()
-    if normalized_role not in {"patient", "caretaker"}:
-        raise HTTPException(status_code=400, detail="Role must be either patient or caretaker")
+    The frontend calls this immediately after Supabase signup so the
+    in-memory store has the correct role before the user navigates.
+    """
+    updates = {}
+    if "full_name" in data:
+        updates["full_name"] = data["full_name"]
+    if "role" in data:
+        role = data["role"].strip().lower()
+        if role not in {"patient", "caretaker"}:
+            raise HTTPException(status_code=400, detail="Role must be patient or caretaker")
+        updates["role"] = role
+    if "age" in data:
+        updates["age"] = data["age"]
+    if "preferred_language" in data:
+        updates["preferred_language"] = data["preferred_language"]
+    if "caregiver_email" in data:
+        updates["caregiver_email"] = data["caregiver_email"]
 
-    hashed = get_password_hash(user.password)
-    users_collection.insert_one({
-        "username": user.username,
-        "full_name": user.full_name,
-        "email": user.email,
-        "hashed_password": hashed,
-        "role": normalized_role,
-        "disabled": False,
-    })
-    access_token = create_access_token(
-        data={"sub": user.username, "role": normalized_role}
-    )
-    return Token(access_token=access_token, token_type="bearer", role=normalized_role)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No profile fields provided")
+
+    users_collection.update_one({"email": current_user.email}, {"$set": updates})
+    updated = users_collection.find_one({"email": current_user.email})
+    return {"message": "Profile updated", "profile": updated}
 
 
 @app.get("/caretaker/report")

@@ -23,12 +23,17 @@ const clearStaleSession = () => {
 
   const protectedPaths = ["/homepage", "/game", "/pattern-game", "/elder-ai", "/reminder", "/medications", "/profile", "/story", "/caretaker", "/caretaker/report", "/caretaker/reminders", "/caretaker/help", "/caretaker/profile", "/caretaker/settings"];
 
-  window.localStorage.removeItem("access_token");
+      window.localStorage.removeItem("access_token");
   window.localStorage.removeItem("user_role");
   window.localStorage.removeItem("user_email");
   window.localStorage.removeItem("user_full_name");
   window.localStorage.removeItem("full_name");
   window.localStorage.removeItem("current_mood");
+
+  /* Notify AuthContext so it can sign out from Supabase too.
+     Without this, supabase.auth.getSession() would restore the
+     session on the next page load and we'd get a redirect loop. */
+  window.dispatchEvent(new CustomEvent("stale-session"));
 
   if (protectedPaths.includes(window.location.pathname)) {
     window.location.href = "/logsign";

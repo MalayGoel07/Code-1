@@ -5,8 +5,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from db import users_collection
-from secruity import User, get_current_active_user
+try:
+    from .db import users_collection
+    from .secruity import User, get_current_active_user
+except ImportError:
+    from db import users_collection
+    from secruity import User, get_current_active_user
 
 router = APIRouter(prefix="/patient", tags=["patient"])
 
@@ -62,14 +66,14 @@ def _sanitize_reminders(reminders):
 
 @router.get("/me")
 async def get_patient_profile( current_user: Annotated[User, Depends(get_current_active_user)]):
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     games_played = user.get("games_played", [])
     return {
         "username": user.get("username", current_user.username),
-        "email": user.get("email", ""),
+        "email": user.get("email", current_user.email),
         "full_name": user.get("full_name", current_user.full_name or ""),
         "age": user.get("age"),
         "preferred_language": user.get("preferred_language", "English"),
@@ -94,8 +98,8 @@ async def update_patient_profile( data: PatientProfileUpdate,current_user: Annot
         updates["caregiver_email"] = data.caregiver_email
     if not updates:
         raise HTTPException(status_code=400, detail="No profile fields provided")
-    users_collection.update_one({"username": current_user.username}, {"$set": updates})
-    updated_user = users_collection.find_one({"username": current_user.username})
+    users_collection.update_one({"email": current_user.email}, {"$set": updates})
+    updated_user = users_collection.find_one({"email": current_user.email})
     return {
         "message": "Profile updated",
         "profile": {
@@ -114,7 +118,7 @@ async def save_mood(data: MoodSelection, current_user: Annotated[User, Depends(g
     if mood not in {"good", "okay", "low"}:
         raise HTTPException(status_code=400, detail="Mood must be good, okay, or low")
 
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -129,7 +133,7 @@ async def save_mood(data: MoodSelection, current_user: Annotated[User, Depends(g
     history.append(entry)
 
     users_collection.update_one(
-        {"username": current_user.username},
+        {"email": current_user.email},
         {"$set": {"current_mood": mood, "mood_history": history}},
     )
     return {"message": "Mood saved", "current_mood": mood, "mood_history": history}
@@ -137,7 +141,7 @@ async def save_mood(data: MoodSelection, current_user: Annotated[User, Depends(g
 
 @router.get("/mood-history")
 async def get_mood_history(current_user: Annotated[User, Depends(get_current_active_user)]):
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -154,7 +158,7 @@ async def record_game_completed(data: GameCompletionEntry, current_user: Annotat
     if not game_id:
         raise HTTPException(status_code=400, detail="Game ID is required")
 
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -165,7 +169,7 @@ async def record_game_completed(data: GameCompletionEntry, current_user: Annotat
         "completed_at": data.completed_at or datetime.now(timezone.utc).isoformat(),
     })
 
-    users_collection.update_one({"username": current_user.username}, {"$set": {"games_played": games_played}})
+    users_collection.update_one({"email": current_user.email}, {"$set": {"games_played": games_played}})
     return {
         "message": "Game completion recorded",
         "games_played": games_played,
@@ -175,7 +179,7 @@ async def record_game_completed(data: GameCompletionEntry, current_user: Annotat
 
 @router.get("/reminders")
 async def get_patient_reminders(current_user: Annotated[User, Depends(get_current_active_user)]):
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -184,7 +188,7 @@ async def get_patient_reminders(current_user: Annotated[User, Depends(get_curren
 
     if len(reminders) != len(raw_reminders):
         users_collection.update_one(
-            {"username": current_user.username},
+            {"email": current_user.email},
             {"$set": {"reminders": reminders}},
         )
 
@@ -196,7 +200,7 @@ async def get_patient_reminders(current_user: Annotated[User, Depends(get_curren
 
 @router.post("/reminders")
 async def add_patient_reminder(data: ReminderSubmission, current_user: Annotated[User, Depends(get_current_active_user)]):
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -210,13 +214,13 @@ async def add_patient_reminder(data: ReminderSubmission, current_user: Annotated
     }
     reminders = list(user.get("reminders", []))
     reminders.append(reminder)
-    users_collection.update_one({"username": current_user.username}, {"$set": {"reminders": reminders}})
+    users_collection.update_one({"email": current_user.email}, {"$set": {"reminders": reminders}})
     return {"message": "Reminder added", "reminder": reminder}
 
 
 @router.post("/reminders/complete")
 async def complete_patient_reminder(data: ReminderCompletion, current_user: Annotated[User, Depends(get_current_active_user)]):
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -227,7 +231,7 @@ async def complete_patient_reminder(data: ReminderCompletion, current_user: Anno
 
     done_count = int(user.get("completed_reminders_count", 0)) + 1
     users_collection.update_one(
-        {"username": current_user.username},
+        {"email": current_user.email},
         {"$set": {"reminders": remaining, "completed_reminders_count": done_count}},
     )
     return {"message": "Reminder completed", "done_count": done_count, "reminders": remaining}
@@ -237,7 +241,7 @@ async def complete_patient_reminder(data: ReminderCompletion, current_user: Anno
 async def get_patient_medications(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
 
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -255,7 +259,7 @@ class CaretakerLinkResponse(BaseModel):
 async def get_link_request(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -273,7 +277,7 @@ async def respond_link_request(
     data: CaretakerLinkResponse,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    user = users_collection.find_one({"username": current_user.username})
+    user = users_collection.find_one({"email": current_user.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -283,7 +287,7 @@ async def respond_link_request(
 
     if data.accept:
         users_collection.update_one(
-            {"username": current_user.username},
+            {"email": current_user.email},
             {"$set": {
                 "caregiver_email": pending_email,
                 "pending_caregiver_email": "",
@@ -293,7 +297,7 @@ async def respond_link_request(
         return {"message": "Caregiver approved", "caregiver_email": pending_email}
 
     users_collection.update_one(
-        {"username": current_user.username},
+        {"email": current_user.email},
         {"$set": {"pending_caregiver_email": "", "pending_caregiver_name": ""}},
     )
     return {"message": "Caregiver request declined"}
