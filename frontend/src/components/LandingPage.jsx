@@ -13,12 +13,11 @@ export default function CodeOneLanding({ onNavigate }) {
 
       <header className="sticky top-0 z-50 border-b backdrop-blur" style={{ borderColor: "#E4DCC8", background: "rgba(255,255,255,0.9)" }}>
         <nav className="mx-auto flex items-center justify-between p-4">
-          <div className="text-xl font-semibold tracking-tight text-slate-900">
-            CODE<span style={{ color: "#2F6F62" }}>-1</span>
-          </div>
+          <button onClick={() => navigate("/")} className="text-xl font-semibold tracking-tight text-slate-900 bg-transparent border-none cursor-pointer hover:opacity-70 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400">
+            Maitri
+          </button>
           <div className="flex flex-row gap-2">
             <button onClick={() => navigate("/DementiaPage")} className="rounded-full border border-blue-200 px-5 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">What is dementia?</button>
-            <button onClick={() => navigate("/homepage")} className="rounded-full border border-blue-200 px-5 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white">Patient Home</button>
             <button onClick={() => navigate("/logsign")} className="rounded-full px-5 py-2 text-sm font-bold text-white transition hover:opacity-90" style={{ background: "#2F6F62" }}>Log In / Sign Up</button>
           </div>
         </nav>
@@ -32,15 +31,15 @@ export default function CodeOneLanding({ onNavigate }) {
             <p className="text-sm uppercase tracking-widest" style={{ color: "#2F6F62" }}>Memory assistance platform for Dementia Patients</p>
             <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl" >Memory care that reaches every home.</h1>
             <p className="mt-6 max-w-xl text-lg text-slate-600">
-              CODE-1 is a cognitive gaming and memory assistance platform built for elderly
+              Maitri is a cognitive gaming and memory assistance platform built for elderly
               dementia patients across the North Eastern Region — helping them stay engaged,
               and helping families stay close, even across long distances and thin networks.
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-4">
-              <a onClick={() => navigate("/homepage")} className="group flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition hover:opacity-90" style={{ background: "#2F6F62" }}  >
-                Patient Help
+              <button onClick={() => navigate("/logsign?mode=signup")} className="group flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition hover:opacity-90" style={{ background: "#2F6F62" }}  >
+                Get Started
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </a>
+              </button>
               <span className="text-sm text-slate-500">
                 Built for rural, low-connectivity elderly care
               </span>
@@ -67,7 +66,7 @@ export default function CodeOneLanding({ onNavigate }) {
       <section id="work" className="border-t px-6 py-24" style={{ borderColor: "#E4DCC8", background: "#EFEEE6" }}>
         <div className="mx-auto max-w-4xl">
           <div className="flex flex-col items-center justify-center text-center">
-            <p className="mb-3 text-lg font-bold uppercase tracking-widest" style={{ color: "#2F6F62" }}> What CODE-1 does</p>
+            <p className="mb-3 text-lg font-bold uppercase tracking-widest" style={{ color: "#2F6F62" }}> What Maitri does</p>
             <h2 className="max-w-2xl text-4xl font-semibold text-slate-900 sm:text-5xl">One platform, four ways it helps.</h2>
           </div>
 
@@ -133,11 +132,11 @@ export default function CodeOneLanding({ onNavigate }) {
 
       <footer className="border-t border-slate-200 px-6 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 text-sm text-slate-500 sm:flex-row">
-          <span className="text-slate-700"> CODE-1</span>
+          <span className="text-slate-700"> Maitri</span>
           <div className="flex flex-col items-end">
             <span>Smart India Hackathon 2026 · Problem Statement - 26003</span>
             <span>· Bennett University 2025-29</span>
-            <span>· Team Code-1</span>
+            <span>· Team Maitri</span>
           </div>
         </div>
       </footer>

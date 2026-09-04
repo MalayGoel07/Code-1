@@ -5,6 +5,9 @@ import {
   BookOpen,
   Bell,
   UserRound,
+  Pill,
+  LogOut,
+  Heart,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -13,35 +16,57 @@ const NAV_ITEMS = [
   { id: "talk", label: "Talk", path: "/elder-ai", icon: MessageCircle },
   { id: "stories", label: "Stories", path: "/story", icon: BookOpen },
   { id: "reminders", label: "Reminders", path: "/reminder", icon: Bell },
+  { id: "medications", label: "Medicines", path: "/medications", icon: Pill },
+  { id: "activities", label: "Activities", path: "/patient/activities", icon: Heart },
   { id: "profile", label: "Profile", path: "/profile", icon: UserRound },
 ];
 
-export default function PatientNavigation({ onNavigate, onLogout, activePage }) { const navigate = onNavigate ?? ((nextPath) => {window.location.href = nextPath; });
+export default function PatientNavigation({ onNavigate, onLogout, activePage }) {
+  const navigate = onNavigate ?? ((nextPath) => {
+    window.history.pushState({}, "", nextPath);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+
+  const currentPage = activePage ?? NAV_ITEMS.find((item) => item.path === window.location.pathname)?.id ?? "home";
 
   return (
-    <nav className="border-b border-[#E4DCC8] bg-[#EFEEE6] px-3 py-3 sm:px-6" aria-label="Patient pages">
-      <ul className="mx-auto grid max-w-3xl list-none grid-cols-3 gap-2 p-0 sm:grid-cols-7">
+    <nav className="px-3 pt-3 sm:px-6 sm:pt-4" aria-label="Patient pages">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-1 rounded-[22px] bg-white px-2 py-2 shadow-[0_10px_30px_rgba(32,38,31,0.08)] sm:justify-start sm:px-3">
         {NAV_ITEMS.map(({ id, label, path, icon: Icon }) => {
-          const isActive = activePage === id;
+          const isActive = currentPage === id;
 
           return (
-            <li key={id}>
-              <button type="button" onClick={() => navigate(path)} aria-current={isActive ? "page" : undefined} className={[ "flex w-full flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-base active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2", isActive  ? "border-[3px] border-[#2F6F62] bg-[#F3E7D0] font-bold text-[#20261F]"  : "border-2 border-[#E4DCC8] bg-white font-semibold text-[#5B6459]", ].join(" ")}>
-                <Icon className="h-7 w-7" strokeWidth={2.5} aria-hidden="true"/>
-                <span>{label}</span>
-              </button>
-            </li>
+            <button
+              key={id}
+              type="button"
+              onClick={() => navigate(path)}
+              aria-current={isActive ? "page" : undefined}
+              className={[
+                "flex w-[72px] flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2.5 text-sm transition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F62] focus-visible:ring-offset-2 sm:w-[84px]",
+                isActive
+                  ? "bg-[#E9E9D8] font-bold text-[#1E4D3E]"
+                  : "font-semibold text-[#6B7466] hover:bg-[#F4F3EC]",
+              ].join(" ")}
+            >
+              <Icon className="h-6 w-6" strokeWidth={2.2} aria-hidden="true" />
+              <span>{label}</span>
+            </button>
           );
         })}
+
         {onLogout && (
-          <li>
-            <button type="button" onClick={onLogout} className="flex w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-[#E5B1B1] bg-[#FFF0F0] px-2 py-3 text-base font-bold text-[#7A2A2A] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2">
-              <span className="text-lg">↩</span>
+          <div className="ml-auto flex items-center sm:border-l sm:border-[#E7E4D8] sm:pl-3">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center gap-2 rounded-2xl px-3 py-2.5 text-base font-semibold text-[#B23A3A] transition hover:bg-[#FBECEC] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B23A3A] focus-visible:ring-offset-2"
+            >
+              <LogOut className="h-5 w-5" aria-hidden="true" />
               <span>Logout</span>
             </button>
-          </li>
+          </div>
         )}
-      </ul>
+      </div>
     </nav>
   );
 }

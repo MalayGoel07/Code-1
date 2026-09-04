@@ -1,0 +1,14 @@
+{
+  "name": "maitri",
+  "version": "1.0.0",
+  "description": "Maitri - Elder Care Management System for SIH 2026",
+  "scripts": {
+    "build": "cd frontend && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "lint": "cd frontend && npm run lint"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}

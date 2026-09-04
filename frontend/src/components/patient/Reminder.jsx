@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pill, CalendarDays, Activity, Check, Clock, Bell, PartyPopper,} from "lucide-react";
 
 import { api } from "../../api";
@@ -19,14 +19,20 @@ const REMINDER_COLORS = {
 };
 
 export default function Reminder({ onNavigate }) {
-  const navigate =
-    onNavigate ??
-    ((nextPath) => {
-      window.location.href = nextPath;
-    });
+  const navigate = useMemo(
+    () =>
+      onNavigate ??
+      ((nextPath) => {
+        window.location.href = nextPath;
+      }),
+    [onNavigate]
+  );
 
   const [reminders, setReminders] = useState([]);
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [doneCount, setDoneCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [completingId, setCompletingId] = useState(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [error, setError] = useState("");
 
@@ -38,20 +44,31 @@ export default function Reminder({ onNavigate }) {
     }
 
     const fetchReminders = async () => {
+      setLoading(true);
+      setError("");
+
       try {
         const data = await api.get("/patient/reminders", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setReminders((data.reminders || []).map((reminder) => ({
+        const nextReminders = (Array.isArray(data?.reminders) ? data.reminders : []).map((reminder) => ({
           ...reminder,
           icon: REMINDER_ICONS[reminder.type] || Bell,
           color: REMINDER_COLORS[reminder.type]?.color || "#2F6F62",
           background: REMINDER_COLORS[reminder.type]?.background || "#E4F0EC",
-        })));
+        }));
+
+        setReminders(nextReminders);
+        setDoneCount(Number(data?.done_count) || 0);
         setCompletedTasks([]);
-      } catch (err) {
-        setError(err.message || "Unable to load reminders.");
+      } catch {
+        setReminders([]);
+        setDoneCount(0);
+        setCompletedTasks([]);
+        setError("We couldn’t load your reminders right now. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -60,21 +77,57 @@ export default function Reminder({ onNavigate }) {
 
   const markAsDone = async (reminder) => {
     const token = localStorage.getItem("access_token");
-    if (!token) {navigate("/logsign"); return}
+    if (!token) {
+      navigate("/logsign");
+      return;
+    }
+
+    if (!reminder?.id || completingId === reminder.id) {
+      return;
+    }
+
+    setCompletingId(reminder.id);
 
     try {
-      await api.post("/patient/reminders/complete",{ reminder_id: reminder.id },{ headers: { Authorization: `Bearer ${token}` } });
-      setReminders((currentReminders) =>currentReminders.filter((currentReminder) => currentReminder.id !== reminder.id));
-      setCompletedTasks((currentCompleted) => [...currentCompleted,{ ...reminder, completedAt: new Date() },]);
+      const response = await api.post(
+        "/patient/reminders/complete",
+        { reminder_id: reminder.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setReminders((currentReminders) =>
+        currentReminders.filter((currentReminder) => currentReminder.id !== reminder.id)
+      );
+      setCompletedTasks((currentCompleted) => [
+        ...currentCompleted,
+        { ...reminder, completedAt: new Date().toISOString() },
+      ]);
+      setDoneCount(Number(response?.done_count) || Number(doneCount) + 1);
       setError("");
       setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 1800);
-    } catch (err) {
-      setError(err.message || "Unable to complete reminder.");
+      window.setTimeout(() => setShowCelebration(false), 1800);
+    } catch {
+      setError("We couldn’t mark that reminder as complete. Please try again.");
+    } finally {
+      setCompletingId(null);
     }
   };
 
-  const undoCompletedTask = (task) => {setCompletedTasks((currentCompleted) => currentCompleted.filter((completedTask) => completedTask.id !== task.id));setReminders((currentReminders) => [...currentReminders,{ ...task, icon: REMINDER_ICONS[task.type] || Bell, color: REMINDER_COLORS[task.type]?.color || "#2F6F62", background: REMINDER_COLORS[task.type]?.background || "#E4F0EC" },]);};
+  const undoCompletedTask = (task) => {
+    setCompletedTasks((currentCompleted) =>
+      currentCompleted.filter((completedTask) => completedTask.id !== task.id)
+    );
+    setReminders((currentReminders) => [
+      ...currentReminders,
+      {
+        ...task,
+        icon: REMINDER_ICONS[task.type] || Bell,
+        color: REMINDER_COLORS[task.type]?.color || "#2F6F62",
+        background: REMINDER_COLORS[task.type]?.background || "#E4F0EC",
+      },
+    ]);
+  };
+
   return (
     <div className="min-h-screen bg-[#FBF8F2] text-[#20261F]" style={{ fontFamily: "Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif", }} >
       <PatientNavigation onNavigate={navigate} activePage="reminders"/>
@@ -96,6 +149,7 @@ export default function Reminder({ onNavigate }) {
       ) : null}
 
       <main className="mx-auto mt-10 max-w-5xl px-6">
+        {error ? <p className="mx-auto mb-4 max-w-3xl rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
         <div className="text-center">
           <h1 className="text-4xl font-bold sm:text-5xl">Reminders</h1>
           <p className="mx-auto mt-3 max-w-2xl text-xl" style={{ color: "#5B6459" }}> Here are the things you need to remember today.</p>
@@ -107,27 +161,30 @@ export default function Reminder({ onNavigate }) {
           <div className="text-left">
             <p className="text-xl font-bold">Today's reminders</p>
             <p className="mt-1 text-lg" style={{ color: "#5B6459" }}>
-              {completedTasks.length} of{" "}
-              {reminders.length + completedTasks.length} completed
+              {doneCount} of {Math.max(reminders.length + doneCount, 0)} completed
             </p>
           </div>
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl" aria-label="Pending reminders">
           <h2 className="mb-5 text-2xl font-bold">Today's Tasks</h2>
-          {reminders.length === 0 ? (
+          {loading ? (
+            <div className="rounded-3xl border border-[#E4DCC8] bg-[#EFEEE6] p-8 text-center text-lg font-medium text-[#5B6459]">
+              Loading your reminders…
+            </div>
+          ) : reminders.length === 0 ? (
             <div className="rounded-3xl p-8 text-center" style={{ background: "#E4F0EC", border: "2px solid #2F6F62", }} >
               <Check className="mx-auto h-12 w-12" style={{ color: "#2F6F62" }} aria-hidden="true"/>
               <h3 className="mt-3 text-2xl font-bold">All tasks completed!</h3>
               <p className="mt-2 text-lg" style={{ color: "#5B6459" }}>
-                Well done. You have finished all your
-                reminders for today.
+                Well done. You have finished all your reminders for today.
               </p>
             </div>
           ) : (
             <div className="space-y-5">
               {reminders.map((reminder) => {
                 const Icon = reminder.icon;
+                const isCompleting = completingId === reminder.id;
 
                 return (
                   <article key={reminder.id} className="rounded-3xl p-6 shadow-sm" style={{ background: "#EFEEE6", border: "2px solid #E4DCC8", }} >
@@ -143,12 +200,40 @@ export default function Reminder({ onNavigate }) {
                           <Clock className="h-5 w-5" aria-hidden="true" />
                           <span>{reminder.time} </span>
                         </div>
-                        <p className="mt-2 text-lg leading-snug" style={{ color: "#5B6459", }}>{reminder.description}</p>
+                        {reminder.frequency || reminder.dosage || reminder.duration ? (
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            {reminder.frequency ? (
+                              <span className="rounded-full px-3 py-1 text-base font-bold" style={{ background: reminder.background, color: reminder.color }}>
+                                {reminder.frequency}{reminder.frequency === "Weekly" && reminder.day ? ` · ${reminder.day}` : ""}
+                              </span>
+                            ) : null}
+                            {reminder.dosage ? (
+                              <span className="rounded-full px-3 py-1 text-base font-bold" style={{ background: reminder.background, color: reminder.color }}>
+                                Dose: {reminder.dosage}
+                              </span>
+                            ) : null}
+                            {reminder.duration ? (
+                              <span className="rounded-full px-3 py-1 text-base font-bold" style={{ background: reminder.background, color: reminder.color }}>
+                                For {reminder.duration}
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                        {reminder.description ? (
+                          <p className="mt-2 text-lg leading-snug" style={{ color: "#5B6459", }}>{reminder.description}</p>
+                        ) : null}
                       </div>
                     </div>
 
-                    <button type="button" onClick={() => markAsDone(reminder) } className="mt-6 flex w-full items-center justify-center gap-3 rounded-full py-4 text-xl font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2" style={{   background: "#C97A2B", }}>
-                      <Check className="h-6 w-6" aria-hidden="true"/> Mark as Done
+                    <button
+                      type="button"
+                      onClick={() => markAsDone(reminder)}
+                      disabled={isCompleting}
+                      className="mt-6 flex w-full items-center justify-center gap-3 rounded-full py-4 text-xl font-bold text-white active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C97A2B] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+                      style={{ background: "#C97A2B" }}
+                    >
+                      <Check className="h-6 w-6" aria-hidden="true"/>
+                      {isCompleting ? "Completing..." : "Mark as Done"}
                     </button>
                   </article>
                 );

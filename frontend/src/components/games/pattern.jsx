@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { api } from "../../api";
 
@@ -77,12 +77,7 @@ export default function PatternGame({ onNavigate }) {
     }
   };
 
-  useEffect(() => {
-    if (currentIndex >= arranged.length) {
-      recordGameCompletion();
-    }
-  }, [currentIndex, arranged.length]);
-  const handleHover = (type) => {
+  const handleHover = async (type) => {
     if (matched.includes(type)) {return;}
     if (type === activeShape.type) {
       const nextMatched = [...matched, type];
@@ -90,6 +85,7 @@ export default function PatternGame({ onNavigate }) {
       setMistake(false);
       if (currentIndex === arranged.length - 1) {
         setMessage("Excellent! You matched every shape.");
+        await recordGameCompletion();
         setCurrentIndex(arranged.length);
         return;
       }
